@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBridge — One Pager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+      .page { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
+    }
+
+    .gradient-hero { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0369a1 100%); }
+    .stat-card { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
+    .section-divider { height: 3px; background: linear-gradient(90deg, #1d4ed8, #0ea5e9, transparent); border-radius: 2px; }
+    .highlight { background: linear-gradient(135deg, #dbeafe, #e0f2fe); border-left: 3px solid #1d4ed8; }
+    .pill-badge { background: linear-gradient(135deg, #1d4ed8, #0369a1); }
+  </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+<!-- Print button -->
+<div class="no-print flex justify-center mb-6 gap-3">
+  <button onclick="window.print()"
+    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-lg transition-colors flex items-center gap-2">
+    🖨️ Save as PDF (Print → Save as PDF)
+  </button>
+  <button onclick="document.body.style.background='white'; document.querySelector('.page').style.margin='0'"
+    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
+    🔲 Full width preview
+  </button>
+</div>
+
+<!-- ONE PAGE -->
+<div class="page bg-white max-w-4xl mx-auto rounded-2xl shadow-2xl overflow-hidden" style="min-height:1100px">
+
+  <!-- ── HERO ──────────────────────────────────────────────────────────────── -->
+  <div class="gradient-hero text-white px-10 py-10">
+    <div class="flex items-start justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-4xl">💊</span>
+          <div>
+            <h1 class="text-4xl font-black tracking-tight">MedBridge</h1>
+            <p class="text-blue-200 text-sm font-light tracking-widest uppercase">药桥 · Drug Translation Intelligence</p>
+          </div>
+        </div>
+      </div>
+      <div class="text-right text-sm text-blue-200">
+        <p>medbridge.health</p>
+        <p>rjl930816@gmail.com</p>
+        <p>github.com/Jianlan0816/medbridge</p>
+      </div>
+    </div>
+
+    <!-- Tagline -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold text-white leading-snug mb-2">
+        Your policyholders travel to China.<br/>
+        <span class="text-blue-200">Their medications don't translate.</span>
+      </h2>
+      <p class="text-blue-100 text-base max-w-xl">
+        MedBridge is an AI-powered drug translation platform that instantly finds safe,
+        approved equivalents for any US medication in China — and vice versa.
+      </p>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-4 gap-4">
+      <div class="stat-card rounded-xl p-4 text-center">
+        <p class="text-3xl font-black">5M+</p>
+        <p class="text-blue-200 text-xs mt-1">US-China travelers annually</p>
+      </div>
+      <div class="stat-card rounded-xl p-4 text-center">
+        <p class="text-3xl font-black">7,000+</p>
+        <p class="text-blue-200 text-xs mt-1">FDA-approved drugs with no direct CN equivalent</p>
+      </div>
+      <div class="stat-card rounded-xl p-4 text-center">
+        <p class="text-3xl font-black">$300B</p>
+        <p class="text-blue-200 text-xs mt-1">annual cost of medication non-adherence (US)</p>
+      </div>
+      <div class="stat-card rounded-xl p-4 text-center">
+        <p class="text-3xl font-black">40%</p>
+        <p class="text-blue-200 text-xs mt-1">rise in China-US travel post-COVID (2024)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BODY ───────────────────────────────────────────────────────────────── -->
+  <div class="px-10 py-8">
+
+    <!-- Problem / Solution -->
+    <div class="grid grid-cols-2 gap-6 mb-8">
+      <div>
+        <div class="section-divider mb-3 w-16"></div>
+        <h3 class="text-lg font-bold text-gray-900 mb-3">😤 The Problem</h3>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <span class="text-red-400 font-bold flex-shrink-0">×</span>
+            <p class="text-sm text-gray-700">A diabetic traveler searches for <strong>"Ozempic"</strong> in a Chinese pharmacy. The pharmacist has never heard of it. The patient goes without insulin for 3 days.</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400 font-bold flex-shrink-0">×</span>
+            <p class="text-sm text-gray-700">A Chinese visitor to the US buys <strong>"芬必得"</strong> equivalent — unknowingly combining it with their blood thinner. Major bleeding event.</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400 font-bold flex-shrink-0">×</span>
+            <p class="text-sm text-gray-700">Same drug, <strong>different strength</strong> in China — patient takes double dose. Avoidable hospitalization. Avoidable claim.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-divider mb-3 w-16" style="background: linear-gradient(90deg, #16a34a, #0d9488, transparent)"></div>
+        <h3 class="text-lg font-bold text-gray-900 mb-3">✅ The Solution</h3>
+        <div class="space-y-3">
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+            <p class="text-sm text-gray-700">Type any drug name in English or Chinese → instant bilingual equivalent with exact dosage comparison.</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+            <p class="text-sm text-gray-700">AI agent checks <strong>drug-drug interactions</strong> across the patient's full medication list before recommending substitutes.</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+            <p class="text-sm text-gray-700">Flags prescription-only drugs, controlled substances, refrigeration requirements, and country-specific availability.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="highlight rounded-xl p-5 mb-8">
+      <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide mb-4">How It Works — 3 Seconds, Not 3 Days</h3>
+      <div class="grid grid-cols-4 gap-3">
+        <div class="text-center">
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">1️⃣</div>
+          <p class="text-xs font-semibold text-gray-700">Enter drug name</p>
+          <p class="text-xs text-gray-500">Any brand, generic, EN or ZH</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">2️⃣</div>
+          <p class="text-xs font-semibold text-gray-700">AI agent searches</p>
+          <p class="text-xs text-gray-500">FDA + NMPA + WHO ATC bridge</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">3️⃣</div>
+          <p class="text-xs font-semibold text-gray-700">Interaction check</p>
+          <p class="text-xs text-gray-500">Full medication list screened</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">4️⃣</div>
+          <p class="text-xs font-semibold text-gray-700">Bilingual result</p>
+          <p class="text-xs text-gray-500">Safe equivalent + warnings</p>
+        </div>
+      </div>
+      <div class="mt-4 bg-white rounded-lg p-3 border border-blue-100">
+        <p class="text-xs text-gray-500 mb-1">Example:</p>
+        <p class="text-sm font-mono">
+          <span class="text-blue-600">"Xarelto"</span>
+          <span class="text-gray-400"> → </span>
+          <span class="text-green-600">拜瑞妥 (Rivaroxaban 15mg, Bayer CN, Rx) ✓ Exact match</span>
+          <span class="text-red-500 ml-2">⚠ Do NOT combine with ibuprofen — bleeding risk</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pilot Offer + Why Me side by side -->
+    <div class="grid grid-cols-2 gap-6 mb-8">
+
+      <!-- Pilot offer -->
+      <div class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl p-5">
+        <h3 class="text-base font-bold mb-3">🤝 Pilot Offer</h3>
+        <div class="space-y-2 mb-4">
+          <div class="flex justify-between text-sm border-b border-blue-500 pb-2">
+            <span class="text-blue-200">Duration</span>
+            <span class="font-semibold">60 days</span>
+          </div>
+          <div class="flex justify-between text-sm border-b border-blue-500 pb-2">
+            <span class="text-blue-200">Users</span>
+            <span class="font-semibold">Up to 1,000 policyholders</span>
+          </div>
+          <div class="flex justify-between text-sm border-b border-blue-500 pb-2">
+            <span class="text-blue-200">Price</span>
+            <span class="font-semibold">$2,000 / month</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-blue-200">Cancel</span>
+            <span class="font-semibold">Anytime, no penalty</span>
+          </div>
+        </div>
+        <div class="bg-blue-500 bg-opacity-40 rounded-lg p-3">
+          <p class="text-xs text-blue-100">
+            Includes white-label option, API integration, and monthly usage report.
+            Full drug database, AI agent, and bilingual support included.
+          </p>
+        </div>
+      </div>
+
+      <!-- Why me -->
+      <div>
+        <h3 class="text-base font-bold text-gray-900 mb-3">👤 Why Jianlan Ren</h3>
+        <div class="space-y-2">
+          <div class="flex gap-2 items-start">
+            <span class="pill-badge text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">PhD</span>
+            <p class="text-sm text-gray-700">Computer Science — AI systems, machine learning, agentic architecture</p>
+          </div>
+          <div class="flex gap-2 items-start">
+            <span class="pill-badge text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">MS</span>
+            <p class="text-sm text-gray-700">Bioinformatics — drug databases, genomics, clinical data pipelines</p>
+          </div>
+          <div class="flex gap-2 items-start">
+            <span class="pill-badge text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">BS</span>
+            <p class="text-sm text-gray-700">Biochemistry — pharmacology, drug mechanisms, clinical safety</p>
+          </div>
+          <div class="flex gap-2 items-start">
+            <span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">Work</span>
+            <p class="text-sm text-gray-700">Machine Learning Engineer at <strong>Adobe</strong> — enterprise software, large-scale systems</p>
+          </div>
+          <div class="flex gap-2 items-start">
+            <span class="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5">Built</span>
+            <p class="text-sm text-gray-700">Working prototype in 3 months. FDA + NMPA + WHO ATC integrated. Live demo available.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target markets -->
+    <div class="mb-8">
+      <div class="section-divider mb-3 w-16"></div>
+      <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Who This Is For</h3>
+      <div class="grid grid-cols-4 gap-3">
+        <div class="border border-gray-100 rounded-xl p-4 text-center hover:border-blue-200 transition-colors">
+          <span class="text-2xl block mb-2">✈️</span>
+          <p class="text-xs font-bold text-gray-800">Travel Insurance</p>
+          <p class="text-xs text-gray-500 mt-1">Reduce medical claims from medication errors abroad</p>
+        </div>
+        <div class="border border-gray-100 rounded-xl p-4 text-center hover:border-blue-200 transition-colors">
+          <span class="text-2xl block mb-2">🏢</span>
+          <p class="text-xs font-bold text-gray-800">Corporate HR</p>
+          <p class="text-xs text-gray-500 mt-1">Duty of care for employees on China assignments</p>
+        </div>
+        <div class="border border-gray-100 rounded-xl p-4 text-center hover:border-blue-200 transition-colors">
+          <span class="text-2xl block mb-2">💊</span>
+          <p class="text-xs font-bold text-gray-800">Pharmacy Chains</p>
+          <p class="text-xs text-gray-500 mt-1">Serve Chinese-American communities (30M+ in US)</p>
+        </div>
+        <div class="border border-gray-100 rounded-xl p-4 text-center hover:border-blue-200 transition-colors">
+          <span class="text-2xl block mb-2">🏥</span>
+          <p class="text-xs font-bold text-gray-800">Hospital Systems</p>
+          <p class="text-xs text-gray-500 mt-1">Discharge planning for international patients</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer CTA -->
+    <div class="bg-gray-50 rounded-xl p-5 flex items-center justify-between">
+      <div>
+        <p class="font-bold text-gray-900">Ready to see it live?</p>
+        <p class="text-sm text-gray-500">30-minute demo call. I'll translate your top 10 policyholder drugs in real time.</p>
+      </div>
+      <div class="text-right flex-shrink-0 ml-6">
+        <a href="mailto:rjl930816@gmail.com"
+          class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm block mb-2 text-center hover:bg-blue-700 transition-colors">
+          rjl930816@gmail.com
+        </a>
+        <p class="text-xs text-gray-400">github.com/Jianlan0816/medbridge</p>
+      </div>
+    </div>
+
+  </div><!-- end body -->
+
+  <!-- Bottom disclaimer -->
+  <div class="bg-gray-50 border-t border-gray-100 px-10 py-3">
+    <p class="text-xs text-gray-400 text-center">
+      MedBridge provides decision-support information only. All recommendations should be verified by a licensed pharmacist.
+      Data sourced from openFDA, WHO ATC, and NMPA databases. © 2025 Jianlan Ren
+    </p>
+  </div>
+
+</div><!-- end page -->
+</body>
+</html>
