@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBridge Demo · 药桥演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+    @keyframes typing { 0% { width:0; } 100% { width:100%; } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes badgePop { 0% { transform:scale(0.7); opacity:0; } 80% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
+
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+    .badge-pop { animation: badgePop 0.35s ease forwards; }
+    .spinner { border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; }
+    .dot-pulse { animation: pulse 1.4s ease-in-out infinite; }
+
+    /* Agent thinking dots */
+    .thinking-dot { width:8px; height:8px; border-radius:50%; background:#3b82f6; animation: pulse 1.2s ease-in-out infinite; }
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Card hover */
+    .drug-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .drug-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+    /* Severity colors */
+    .sev-contraindicated { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
+    .sev-major { background:#fff7ed; border-color:#fdba74; color:#9a3412; }
+    .sev-moderate { background:#fefce8; border-color:#fde047; color:#854d0e; }
+    .sev-minor { background:#f0fdf4; border-color:#86efac; color:#166534; }
+
+    /* Gradient header */
+    .hero-gradient { background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 40%, #0369a1 100%); }
+
+    /* Mode button active */
+    .mode-btn-active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
+    .mode-btn-inactive { background: white; color: #374151; border-color: #d1d5db; }
+    .mode-btn-inactive:hover { border-color: #93c5fd; color: #1d4ed8; }
+
+    /* ATC badge */
+    .atc-badge { font-family: 'Courier New', monospace; letter-spacing: 0.05em; }
+
+    /* Suggestion chips */
+    .chip { cursor: pointer; transition: all 0.15s; }
+    .chip:hover { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
+
+    /* Step indicator */
+    .step-line { position: relative; }
+    .step-line::before { content:''; position:absolute; left:11px; top:24px; bottom:-8px; width:2px; background:#e5e7eb; }
+    .step-line:last-child::before { display:none; }
+
+    /* Country toggle */
+    .country-pill { transition: all 0.2s; cursor: pointer; }
+    .country-pill.active { background: #1d4ed8; color: white; }
+    .country-pill.inactive { background: #f3f4f6; color: #6b7280; }
+    .country-pill.inactive:hover { background: #e0e7ff; color: #3730a3; }
+
+    /* Progress bar */
+    @keyframes progress { from { width:0%; } to { width:100%; } }
+    .progress-bar { animation: progress linear forwards; }
+
+    /* Equivalent arrow */
+    .eq-arrow { background: linear-gradient(90deg, #dbeafe, #e0f2fe); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- ── HEADER ───────────────────────────────────────────────────────────────── -->
+<header class="hero-gradient text-white shadow-xl">
+  <div class="max-w-5xl mx-auto px-5 py-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="text-5xl">💊</div>
+        <div>
+          <div class="flex items-baseline gap-3">
+            <h1 class="text-3xl font-extrabold tracking-tight">MedBridge</h1>
+            <span class="text-blue-200 text-xl font-light">药桥</span>
+            <span class="bg-blue-500 bg-opacity-40 text-blue-100 text-xs px-2 py-0.5 rounded-full font-medium border border-blue-400">DEMO</span>
+          </div>
+          <p class="text-blue-200 text-sm mt-0.5">AI-powered drug translation · 智能药品翻译 · US ↔ 🇨🇳 China</p>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-2 text-xs text-blue-200 bg-blue-800 bg-opacity-40 px-3 py-2 rounded-lg border border-blue-600">
+        <span class="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+        Powered by Claude AI
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── MAIN ─────────────────────────────────────────────────────────────────── -->
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- Mode Toggle -->
+  <div class="flex gap-3 mb-6">
+    <button id="btn-condition" onclick="setMode('condition')"
+      class="mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all mode-btn-active flex items-center justify-center gap-2">
+      🔍 <span>Search by Condition</span> <span class="opacity-60 font-normal hidden sm:inline">/ 按病症搜索</span>
+    </button>
+    <button id="btn-brand" onclick="setMode('brand')"
+      class="mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all mode-btn-inactive flex items-center justify-center gap-2">
+      💊 <span>Translate My Medicine</span> <span class="opacity-60 font-normal hidden sm:inline">/ 翻译我的药</span>
+    </button>
+  </div>
+
+  <!-- Direction Bar -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5 flex items-center gap-4">
+    <span class="text-sm font-semibold text-gray-500">Direction / 方向</span>
+    <div class="flex items-center gap-2">
+      <button id="pill-us" class="country-pill active text-sm font-semibold px-4 py-1.5 rounded-full" onclick="setDirection('US','CN')">
+        🇺🇸 US
+      </button>
+      <span class="text-gray-300 font-light text-lg">→</span>
+      <button id="pill-cn-1" class="country-pill active text-sm font-semibold px-4 py-1.5 rounded-full" onclick="setDirection('US','CN')">
+        🇨🇳 China
+      </button>
+    </div>
+    <button onclick="swapDirection()" class="ml-1 text-blue-500 hover:text-blue-700 transition-colors text-lg" title="Swap direction">⇄</button>
+    <div class="flex items-center gap-2 ml-2">
+      <button id="pill-cn-2" class="country-pill inactive text-sm font-semibold px-4 py-1.5 rounded-full" onclick="setDirection('CN','US')">
+        🇨🇳→🇺🇸
+      </button>
+    </div>
+    <div class="ml-auto text-xs text-gray-400 hidden md:block">
+      More countries coming soon · 更多国家即将上线
+    </div>
+  </div>
+
+  <!-- ── CONDITION FORM ── -->
+  <div id="form-condition" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+    <label class="block text-sm font-semibold text-gray-700 mb-3">
+      What condition do you need medicine for? · 您需要治疗什么病症？
+    </label>
+    <div class="flex gap-3 mb-4">
+      <input id="input-condition" type="text"
+        placeholder="e.g. type 2 diabetes / 糖尿病  ·  hypertension / 高血压  ·  headache / 头痛"
+        class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-gray-50 transition-all"
+        onkeydown="if(event.key==='Enter') search()" />
+      <button onclick="search()"
+        class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors shadow-sm">
+        Search 搜索
+      </button>
+    </div>
+    <!-- Suggestion chips -->
+    <div class="flex flex-wrap gap-2">
+      <span class="text-xs text-gray-400 self-center">Try:</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickSearch('type 2 diabetes')">🩸 Type 2 Diabetes</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickSearch('hypertension')">❤️ Hypertension 高血压</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickSearch('headache')">🤕 Headache 头痛</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickSearch('depression')">🧠 Depression 抑郁症</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickSearch('high cholesterol')">📊 High Cholesterol</span>
+    </div>
+  </div>
+
+  <!-- ── BRAND FORM ── -->
+  <div id="form-brand" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-3">
+      What drug do you currently take? · 您目前服用什么药？
+    </label>
+    <div class="flex gap-3 mb-3">
+      <input id="input-brand" type="text"
+        placeholder="e.g. Ozempic · 诺和泰 · Lipitor · 立普妥 · Zoloft"
+        class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-gray-50 transition-all"
+        onkeydown="if(event.key==='Enter') search()" />
+      <button onclick="search()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors shadow-sm">
+        Translate 翻译
+      </button>
+    </div>
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-500 mb-2">
+        Other medications (for interaction check) · 其他用药（检查相互作用）
+      </label>
+      <input id="input-other-drugs" type="text"
+        placeholder="e.g. Metformin, Aspirin, 布洛芬 (comma separated)"
+        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50" />
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <span class="text-xs text-gray-400 self-center">Try:</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickBrand('Ozempic')">💉 Ozempic</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickBrand('Lipitor')">💊 Lipitor</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickBrand('Tylenol')">🌡️ Tylenol</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickBrand('Xarelto')">🩸 Xarelto</span>
+      <span class="chip bg-gray-50 border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-full" onclick="quickBrand('Zoloft')">🧠 Zoloft</span>
+    </div>
+  </div>
+
+  <!-- ── AGENT THINKING ── -->
+  <div id="loading" class="hidden">
+    <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="spinner"></div>
+        <div>
+          <p class="font-semibold text-gray-700 text-sm">Agent is researching...</p>
+          <p class="text-gray-400 text-xs">正在跨库查询，请稍候</p>
+        </div>
+      </div>
+      <!-- Progress bar -->
+      <div class="bg-gray-100 rounded-full h-1.5 mb-5 overflow-hidden">
+        <div id="progress-bar" class="bg-blue-500 h-full rounded-full progress-bar" style="width:0%"></div>
+      </div>
+      <!-- Steps -->
+      <div id="agent-steps" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="results" class="hidden space-y-5"></div>
+
+  <!-- Disclaimer -->
+  <div class="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
+    <span class="text-xl flex-shrink-0">⚠️</span>
+    <div class="text-xs text-amber-800">
+      <strong>Medical Disclaimer / 医疗免责声明:</strong>
+      MedBridge provides information only and is not a substitute for professional medical advice.
+      Always consult a licensed pharmacist or physician before changing any medication.
+      <span class="text-amber-700">本工具仅供参考，更换药物前请务必咨询执业药剂师或医生。</span>
+    </div>
+  </div>
+</main>
+
+<!-- ── DEMO DATA ─────────────────────────────────────────────────────────────── -->
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let currentMode = 'condition';
+let fromCountry = 'US';
+let toCountry = 'CN';
+
+// ── Demo responses keyed by (mode:query) ─────────────────────────────────────
+const DEMO_DATA = {
+
+  // ── CONDITION searches ────────────────────────────────────────────────────
+  'condition:type 2 diabetes': {
+    summary_en: "Found 3 first-line diabetes medications available in both the US and China. All require a prescription.",
+    summary_zh: "找到3种在中美两国均有的一线糖尿病药物，均需处方。",
+    agent_steps: [
+      { tool: "search_drugs_by_condition", label: "Searching FDA database for diabetes drugs...", done: 'Found 6 US drugs' },
+      { tool: "search_drugs_by_condition", label: "Searching NMPA database (中国药监局)...", done: 'Found 8 CN drugs' },
+      { tool: "find_equivalents", label: "Matching via WHO ATC bridge codes...", done: '3 cross-country pairs found' },
+      { tool: "check_interactions", label: "Checking drug-drug interactions...", done: 'No major interactions detected' },
+    ],
+    safety_flags: [
+      "⚠️ Ozempic / 诺和泰 (Semaglutide) requires refrigeration — plan travel carefully",
+      "⚠️ All diabetes medications listed require a prescription in both countries",
+      "💡 Dosage may differ between countries — always verify with a local pharmacist",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Glucophage",
+        brand_name_zh: "格华止",
+        generic_name: "Metformin",
+        generic_name_zh: "二甲双胍",
+        country: "US",
+        atc_code: "A10BA02",
+        prescription_status: "Rx",
+        strength: "500mg / 850mg / 1000mg tablet",
+        manufacturer: "Bristol-Myers Squibb",
+        indications_en: "Type 2 diabetes — first-line therapy",
+        indications_zh: "2型糖尿病一线用药",
+        warnings_en: "Take with meals to reduce GI side effects.",
+        warnings_zh: "随餐服用以减少胃肠道副作用。",
+        equivalents: [
+          { brand_name_en: "Glucophage", brand_name_zh: "格华止", generic_name: "Metformin", generic_name_zh: "二甲双胍", country: "CN", prescription_status: "Rx", strength: "500mg tablet", manufacturer: "默克雪兰诺", match: "exact" },
+          { brand_name_en: "Metformin", brand_name_zh: "二甲双胍片", generic_name: "Metformin", generic_name_zh: "二甲双胍", country: "CN", prescription_status: "Rx", strength: "250mg / 500mg", manufacturer: "多家国产厂商", match: "generic" },
+        ]
+      },
+      {
+        brand_name_en: "Ozempic",
+        brand_name_zh: "诺和泰",
+        generic_name: "Semaglutide",
+        generic_name_zh: "司美格鲁肽",
+        country: "US",
+        atc_code: "A10BJ02",
+        prescription_status: "Rx",
+        strength: "0.5mg / 1mg / 2mg — weekly injection",
+        manufacturer: "Novo Nordisk",
+        indications_en: "Type 2 diabetes, weight management",
+        indications_zh: "2型糖尿病、体重管理",
+        warnings_en: "Requires refrigeration. Injectable pen device. Do NOT substitute without doctor approval.",
+        warnings_zh: "需冷藏保存。注射笔剂型。未经医生批准切勿替换。",
+        is_injectable: true,
+        requires_refrigeration: true,
+        equivalents: [
+          { brand_name_en: "Ozempic", brand_name_zh: "诺和泰", generic_name: "Semaglutide", generic_name_zh: "司美格鲁肽", country: "CN", prescription_status: "Rx", strength: "0.5mg / 1mg — weekly injection", manufacturer: "诺和诺德（中国）", match: "exact" },
+        ]
+      },
+      {
+        brand_name_en: "Jardiance",
+        brand_name_zh: "欧唐静",
+        generic_name: "Empagliflozin",
+        generic_name_zh: "恩格列净",
+        country: "US",
+        atc_code: "A10BK01",
+        prescription_status: "Rx",
+        strength: "10mg / 25mg tablet",
+        manufacturer: "Boehringer Ingelheim",
+        indications_en: "Type 2 diabetes, heart failure, chronic kidney disease",
+        indications_zh: "2型糖尿病、心力衰竭、慢性肾脏病",
+        warnings_en: "May cause urinary tract infections. Stay hydrated.",
+        warnings_zh: "可能引起尿路感染，注意补水。",
+        equivalents: [
+          { brand_name_en: "Jardiance", brand_name_zh: "欧唐静", generic_name: "Empagliflozin", generic_name_zh: "恩格列净", country: "CN", prescription_status: "Rx", strength: "10mg / 25mg tablet", manufacturer: "勃林格殷格翰", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  'condition:hypertension': {
+    summary_en: "Found 3 antihypertensive medications with Chinese equivalents. These are prescription drugs — do not self-medicate.",
+    summary_zh: "找到3种在中美均有的降压药，均为处方药，请勿自行用药。",
+    agent_steps: [
+      { tool: "search_drugs_by_condition", label: "Searching FDA for antihypertensive drugs...", done: 'Found 5 US drugs' },
+      { tool: "search_drugs_by_condition", label: "Searching NMPA 中国药监局...", done: 'Found 7 CN drugs' },
+      { tool: "find_equivalents", label: "Matching by ATC code C07, C09...", done: '3 pairs matched' },
+    ],
+    safety_flags: [
+      "⚠️ Never stop blood pressure medication abruptly — consult your doctor",
+      "💡 Beta-blockers (Bisoprolol) have different branding in China but same ingredient",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Concor", brand_name_zh: "康忻", generic_name: "Bisoprolol", generic_name_zh: "比索洛尔",
+        country: "US", atc_code: "C07AB07", prescription_status: "Rx", strength: "5mg / 10mg tablet",
+        manufacturer: "Merck", indications_en: "Hypertension, angina pectoris, heart failure", indications_zh: "高血压、心绞痛、心力衰竭",
+        warnings_en: "Do not stop abruptly. Monitor heart rate.", warnings_zh: "不可骤然停药，需监测心率。",
+        equivalents: [{ brand_name_en: "Concor", brand_name_zh: "康忻", generic_name: "Bisoprolol", generic_name_zh: "比索洛尔", country: "CN", prescription_status: "Rx", strength: "5mg tablet", manufacturer: "默克雪兰诺", match: "exact" }]
+      },
+      {
+        brand_name_en: "Altace", brand_name_zh: "瑞泰", generic_name: "Ramipril", generic_name_zh: "雷米普利",
+        country: "US", atc_code: "C09AA05", prescription_status: "Rx", strength: "2.5mg / 5mg / 10mg capsule",
+        manufacturer: "Pfizer", indications_en: "Hypertension, heart failure, prevention after heart attack", indications_zh: "高血压、心力衰竭、心肌梗死后预防",
+        warnings_en: "May cause dry cough. Avoid in pregnancy.", warnings_zh: "可能引起干咳，孕妇禁用。",
+        equivalents: [{ brand_name_en: "Ramipril", brand_name_zh: "瑞泰", generic_name: "Ramipril", generic_name_zh: "雷米普利", country: "CN", prescription_status: "Rx", strength: "2.5mg / 5mg capsule", manufacturer: "赛诺菲", match: "exact" }]
+      },
+      {
+        brand_name_en: "Capoten", brand_name_zh: "开博通", generic_name: "Captopril", generic_name_zh: "卡托普利",
+        country: "US", atc_code: "C09AA01", prescription_status: "Rx", strength: "25mg / 50mg tablet",
+        manufacturer: "Par Pharmaceutical", indications_en: "Hypertension, heart failure", indications_zh: "高血压、心力衰竭",
+        warnings_en: "Take on empty stomach. May cause dry cough.", warnings_zh: "空腹服用，可能引起干咳。",
+        equivalents: [{ brand_name_en: "Capoten", brand_name_zh: "开博通", generic_name: "Captopril", generic_name_zh: "卡托普利", country: "CN", prescription_status: "Rx", strength: "25mg tablet", manufacturer: "施贵宝", match: "exact" }]
+      },
+    ]
+  },
+
+  'condition:headache': {
+    summary_en: "Found 2 OTC pain relievers available in both countries. Note dosage differences between US and Chinese versions.",
+    summary_zh: "找到2种中美均有的非处方止痛药，注意中美版本的剂量差异。",
+    agent_steps: [
+      { tool: "search_drugs_by_condition", label: "Searching for analgesics...", done: 'Found OTC options' },
+      { tool: "find_equivalents", label: "Matching via ATC N02BE, M01AE...", done: '2 pairs found' },
+      { tool: "check_interactions", label: "Checking ibuprofen + paracetamol interaction...", done: 'Minor — generally safe' },
+    ],
+    safety_flags: [
+      "⚠️ Tylenol (US) 500mg vs 百服宁 (CN) 500mg — same dose, safe",
+      "⚠️ Advil (US) 200mg vs 芬必得 (CN) 300mg SUSTAINED RELEASE — different! CN version is slower-acting",
+      "💡 Do not exceed paracetamol 4g/day — avoid with alcohol",
+    ],
+    interactions: [
+      { drug_a: "Ibuprofen", drug_b: "Paracetamol", severity: "minor", description_en: "Can be safely combined at standard doses. Some evidence suggests alternating is more effective for pain.", description_zh: "标准剂量下可安全合用，交替服用对疼痛可能更有效。" }
+    ],
+    recommendations: [
+      {
+        brand_name_en: "Tylenol", brand_name_zh: "泰诺 / 百服宁", generic_name: "Paracetamol (Acetaminophen)", generic_name_zh: "对乙酰氨基酚",
+        country: "US", atc_code: "N02BE01", prescription_status: "OTC", strength: "325mg / 500mg / 650mg tablet",
+        manufacturer: "Johnson & Johnson", indications_en: "Pain, fever, headache", indications_zh: "疼痛、发烧、头痛",
+        warnings_en: "Max 4g/day. Avoid alcohol. Check other medications for hidden paracetamol.", warnings_zh: "每日不超过4g，避免饮酒，注意复方药中的隐性成分。",
+        equivalents: [
+          { brand_name_en: "Tylenol", brand_name_zh: "泰诺", generic_name: "Paracetamol", generic_name_zh: "对乙酰氨基酚", country: "CN", prescription_status: "OTC", strength: "500mg tablet", manufacturer: "强生", match: "exact" },
+          { brand_name_en: "Baifu Ning", brand_name_zh: "百服宁", generic_name: "Paracetamol", generic_name_zh: "对乙酰氨基酚", country: "CN", prescription_status: "OTC", strength: "500mg tablet", manufacturer: "中美天津史克", match: "generic" },
+        ]
+      },
+      {
+        brand_name_en: "Advil", brand_name_zh: "芬必得", generic_name: "Ibuprofen", generic_name_zh: "布洛芬",
+        country: "US", atc_code: "M01AE01", prescription_status: "OTC", strength: "200mg / 400mg tablet",
+        manufacturer: "Pfizer", indications_en: "Pain, fever, inflammation, headache", indications_zh: "疼痛、发烧、炎症、头痛",
+        warnings_en: "Take with food. Avoid with blood thinners. US: 200mg immediate release.", warnings_zh: "随食物服用，避免与抗凝药合用。⚠️ 中国版为300mg缓释胶囊，与美国版吸收方式不同。",
+        equivalents: [
+          { brand_name_en: "Fenbide", brand_name_zh: "芬必得", generic_name: "Ibuprofen SR", generic_name_zh: "布洛芬缓释", country: "CN", prescription_status: "OTC", strength: "300mg SUSTAINED RELEASE capsule ⚠️ Different formulation", manufacturer: "中美天津史克", match: "similar" },
+        ]
+      },
+    ]
+  },
+
+  'condition:depression': {
+    summary_en: "Found 2 SSRI antidepressants available in both countries. These require prescription and should never be stopped abruptly.",
+    summary_zh: "找到2种中美均有的SSRI抗抑郁药，均需处方，切勿骤然停药。",
+    agent_steps: [
+      { tool: "search_drugs_by_condition", label: "Searching antidepressants (N06A class)...", done: 'Found SSRIs' },
+      { tool: "find_equivalents", label: "Matching by ATC N06AB...", done: '2 pairs found' },
+      { tool: "check_interactions", label: "Checking SSRI + SSRI interaction...", done: '⚠️ Contraindicated combination found' },
+    ],
+    safety_flags: [
+      "🔴 NEVER combine two SSRIs (e.g. Zoloft + Prozac) — serotonin syndrome risk is life-threatening",
+      "⚠️ Do NOT stop antidepressants abruptly — taper under doctor supervision",
+      "⚠️ Psychiatric medications should NEVER be self-substituted when traveling",
+      "💡 Bring a 90-day supply and a doctor's letter in both languages",
+    ],
+    interactions: [
+      { drug_a: "Sertraline (Zoloft)", drug_b: "Fluoxetine (Prozac)", severity: "contraindicated", description_en: "Never combine two SSRIs. Risk of life-threatening serotonin syndrome: agitation, rapid heart rate, high fever.", description_zh: "禁止合用两种SSRI。有血清素综合征风险：躁动、心跳加速、高热，可危及生命。" }
+    ],
+    recommendations: [
+      {
+        brand_name_en: "Zoloft", brand_name_zh: "左洛复", generic_name: "Sertraline", generic_name_zh: "舍曲林",
+        country: "US", atc_code: "N06AB06", prescription_status: "Rx", strength: "25mg / 50mg / 100mg tablet",
+        manufacturer: "Pfizer", indications_en: "Depression, anxiety, OCD, PTSD, panic disorder", indications_zh: "抑郁症、焦虑症、强迫症、创伤后应激障碍",
+        warnings_en: "Do not stop abruptly. Takes 4–6 weeks to reach full effect. Cannot substitute without doctor.", warnings_zh: "切勿骤然停药，需4-6周起效，未经医生指导不可替换。",
+        equivalents: [
+          { brand_name_en: "Zoloft", brand_name_zh: "左洛复", generic_name: "Sertraline", generic_name_zh: "舍曲林", country: "CN", prescription_status: "Rx", strength: "50mg tablet", manufacturer: "辉瑞", match: "exact" },
+        ]
+      },
+      {
+        brand_name_en: "Prozac", brand_name_zh: "百忧解", generic_name: "Fluoxetine", generic_name_zh: "氟西汀",
+        country: "US", atc_code: "N06AB03", prescription_status: "Rx", strength: "10mg / 20mg / 40mg capsule",
+        manufacturer: "Eli Lilly", indications_en: "Depression, OCD, bulimia nervosa, panic disorder", indications_zh: "抑郁症、强迫症、神经性贪食症",
+        warnings_en: "Longer half-life than other SSRIs — more forgiving if doses missed, but still do not skip.", warnings_zh: "半衰期较长，但仍不可漏服。",
+        equivalents: [
+          { brand_name_en: "Prozac", brand_name_zh: "百忧解", generic_name: "Fluoxetine", generic_name_zh: "氟西汀", country: "CN", prescription_status: "Rx", strength: "20mg capsule", manufacturer: "礼来", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  'condition:high cholesterol': {
+    summary_en: "Found the leading statin (Lipitor/立普妥) available identically in both countries.",
+    summary_zh: "找到最常用的他汀类药物，在中美两国均有完全相同的产品。",
+    agent_steps: [
+      { tool: "search_drugs_by_condition", label: "Searching statins (C10A class)...", done: 'Atorvastatin found' },
+      { tool: "find_equivalents", label: "Matching via ATC C10AA05...", done: 'Exact brand match in CN' },
+      { tool: "check_interactions", label: "Checking statin interactions...", done: '1 moderate interaction noted' },
+    ],
+    safety_flags: [
+      "💡 Lipitor (立普妥) is the same Pfizer product in both countries — identical formula",
+      "⚠️ Grapefruit juice can increase atorvastatin blood levels — avoid",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Lipitor", brand_name_zh: "立普妥", generic_name: "Atorvastatin", generic_name_zh: "阿托伐他汀",
+        country: "US", atc_code: "C10AA05", prescription_status: "Rx", strength: "10mg / 20mg / 40mg / 80mg tablet",
+        manufacturer: "Pfizer", indications_en: "High cholesterol, prevention of heart disease and stroke", indications_zh: "高胆固醇、预防心脏病和卒中",
+        warnings_en: "Avoid grapefruit. Report muscle pain immediately (rare myopathy risk).", warnings_zh: "避免葡萄柚。出现肌肉疼痛立即就医（罕见肌病风险）。",
+        equivalents: [
+          { brand_name_en: "Lipitor", brand_name_zh: "立普妥", generic_name: "Atorvastatin", generic_name_zh: "阿托伐他汀", country: "CN", prescription_status: "Rx", strength: "10mg / 20mg tablet", manufacturer: "辉瑞", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  // ── BRAND searches ────────────────────────────────────────────────────────
+  'brand:ozempic': {
+    summary_en: "Ozempic (semaglutide) is available in China as 诺和泰 by the same manufacturer Novo Nordisk. Same active ingredient, same weekly injection format.",
+    summary_zh: "Ozempic（司美格鲁肽）在中国以「诺和泰」品牌销售，由同一厂商诺和诺德生产。成分相同，均为每周一次注射。",
+    agent_steps: [
+      { tool: "search_drugs_by_brand", label: "Looking up Ozempic in FDA database...", done: 'Found: semaglutide 0.5/1/2mg' },
+      { tool: "find_equivalents", label: "Bridging via ATC A10BJ02...", done: '诺和泰 found in NMPA' },
+      { tool: "get_drug_detail", label: "Fetching full CN drug details...", done: 'Details retrieved' },
+      { tool: "check_interactions", label: "Checking travel safety flags...", done: '⚠️ Refrigeration flag set' },
+    ],
+    safety_flags: [
+      "🧊 Requires refrigeration (2–8°C). Use an insulin travel cooler for flights.",
+      "💉 Injectable pen — declare at customs, carry doctor's letter",
+      "⚠️ Prescription required in BOTH countries — cannot purchase OTC in China",
+      "📦 Chinese version (诺和泰) comes in 0.5mg/1mg only — 2mg dose not yet available in CN",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Ozempic", brand_name_zh: "诺和泰", generic_name: "Semaglutide", generic_name_zh: "司美格鲁肽",
+        country: "US", atc_code: "A10BJ02", prescription_status: "Rx",
+        strength: "0.5mg / 1mg / 2mg — weekly subcutaneous injection",
+        manufacturer: "Novo Nordisk", indications_en: "Type 2 diabetes, cardiovascular risk reduction",
+        indications_zh: "2型糖尿病，降低心血管风险",
+        warnings_en: "Refrigerate at 2–8°C. After first use: room temp max 56 days. Do NOT freeze.",
+        warnings_zh: "2-8°C冷藏。首次使用后室温最多保存56天。切勿冷冻。",
+        is_injectable: true, requires_refrigeration: true,
+        equivalents: [
+          { brand_name_en: "Ozempic", brand_name_zh: "诺和泰", generic_name: "Semaglutide", generic_name_zh: "司美格鲁肽", country: "CN", prescription_status: "Rx", strength: "0.5mg / 1mg weekly injection (2mg NOT available in CN)", manufacturer: "诺和诺德（中国）制药有限公司", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  'brand:lipitor': {
+    summary_en: "Great news — Lipitor (立普妥) is the exact same Pfizer product sold in China. Same formula, same manufacturer.",
+    summary_zh: "好消息——立普妥与美国Lipitor是辉瑞同一产品，配方和厂商完全相同。",
+    agent_steps: [
+      { tool: "search_drugs_by_brand", label: "Looking up Lipitor in FDA database...", done: 'Atorvastatin 10/20/40/80mg' },
+      { tool: "find_equivalents", label: "Bridging via ATC C10AA05...", done: '立普妥 exact match found' },
+      { tool: "get_drug_detail", label: "Verifying manufacturer and strength...", done: 'Same Pfizer product confirmed' },
+    ],
+    safety_flags: [
+      "✅ Same manufacturer (Pfizer / 辉瑞) — identical product",
+      "⚠️ CN version comes in 10mg and 20mg only — 40mg/80mg may need local prescription adjustment",
+      "🍊 Avoid grapefruit juice in both countries",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Lipitor", brand_name_zh: "立普妥", generic_name: "Atorvastatin", generic_name_zh: "阿托伐他汀",
+        country: "US", atc_code: "C10AA05", prescription_status: "Rx",
+        strength: "10mg / 20mg / 40mg / 80mg tablet",
+        manufacturer: "Pfizer", indications_en: "High cholesterol, heart disease prevention",
+        indications_zh: "高胆固醇，预防心脏病",
+        warnings_en: "Avoid grapefruit. Report unexplained muscle pain.", warnings_zh: "避免葡萄柚。出现不明原因肌肉酸痛请就医。",
+        equivalents: [
+          { brand_name_en: "Lipitor", brand_name_zh: "立普妥", generic_name: "Atorvastatin", generic_name_zh: "阿托伐他汀", country: "CN", prescription_status: "Rx", strength: "10mg / 20mg tablet", manufacturer: "辉瑞制药（大连）", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  'brand:tylenol': {
+    summary_en: "Tylenol (Paracetamol) is widely available in China under the same brand name (泰诺) and as the generic 百服宁. OTC in both countries.",
+    summary_zh: "泰诺（对乙酰氨基酚）在中国以「泰诺」和「百服宁」品牌广泛销售，两国均为非处方药。",
+    agent_steps: [
+      { tool: "search_drugs_by_brand", label: "Looking up Tylenol...", done: 'Paracetamol 325/500/650mg' },
+      { tool: "find_equivalents", label: "Bridging via ATC N02BE01...", done: '泰诺, 百服宁 found' },
+    ],
+    safety_flags: [
+      "✅ OTC in both US and China — easy to purchase",
+      "⚠️ Max dose: 4g/day (8 × 500mg). Do NOT exceed.",
+      "⚠️ Avoid combining with alcohol",
+      "💡 Many cold/flu combination drugs also contain paracetamol — check labels to avoid double-dosing",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Tylenol", brand_name_zh: "泰诺 / 百服宁", generic_name: "Paracetamol", generic_name_zh: "对乙酰氨基酚",
+        country: "US", atc_code: "N02BE01", prescription_status: "OTC",
+        strength: "325mg / 500mg / 650mg tablet",
+        manufacturer: "Johnson & Johnson",
+        indications_en: "Pain relief, fever, headache, muscle ache",
+        indications_zh: "止痛、退烧、头痛、肌肉酸痛",
+        warnings_en: "Do not exceed 4g/day. Avoid alcohol. Many combo drugs contain hidden paracetamol.", warnings_zh: "每日不超过4g。避免饮酒。许多复方药中含有隐性对乙酰氨基酚成分。",
+        equivalents: [
+          { brand_name_en: "Tylenol", brand_name_zh: "泰诺", country: "CN", prescription_status: "OTC", strength: "500mg tablet", manufacturer: "强生（中国）", match: "exact" },
+          { brand_name_en: "Baifu Ning", brand_name_zh: "百服宁", country: "CN", prescription_status: "OTC", strength: "500mg tablet", manufacturer: "中美天津史克", match: "generic" },
+        ]
+      },
+    ]
+  },
+
+  'brand:xarelto': {
+    summary_en: "Xarelto (Rivaroxaban) is available in China as 拜瑞妥 by the same Bayer. CRITICAL: Never substitute blood thinners without your cardiologist's approval.",
+    summary_zh: "Xarelto（利伐沙班）在中国以「拜瑞妥」销售，同为拜耳产品。重要提示：切勿未经心脏科医生批准自行更换抗凝药。",
+    agent_steps: [
+      { tool: "search_drugs_by_brand", label: "Looking up Xarelto in FDA database...", done: 'Rivaroxaban 10/15/20mg' },
+      { tool: "find_equivalents", label: "Bridging via ATC B01AF01...", done: '拜瑞妥 found in NMPA' },
+      { tool: "check_interactions", label: "Checking blood thinner interactions...", done: '⚠️ NSAIDs contraindicated' },
+    ],
+    safety_flags: [
+      "🔴 BLOOD THINNER — Never change dose or brand without cardiologist approval",
+      "🔴 Do NOT combine with NSAIDs (Ibuprofen, Advil, 芬必得) — major bleeding risk",
+      "💡 Bring 90-day supply + carry anticoagulation card in both languages",
+      "⚠️ If you miss a dose: take same day, then continue normally. Never double dose.",
+    ],
+    interactions: [
+      { drug_a: "Rivaroxaban (Xarelto)", drug_b: "Ibuprofen (Advil/芬必得)", severity: "major", description_en: "Combining rivaroxaban with ibuprofen significantly increases bleeding risk. Avoid NSAIDs — use Tylenol for pain instead.", description_zh: "利伐沙班与布洛芬合用显著增加出血风险。避免使用非甾体抗炎药，疼痛时改用泰诺。" }
+    ],
+    recommendations: [
+      {
+        brand_name_en: "Xarelto", brand_name_zh: "拜瑞妥", generic_name: "Rivaroxaban", generic_name_zh: "利伐沙班",
+        country: "US", atc_code: "B01AF01", prescription_status: "Rx",
+        strength: "10mg / 15mg / 20mg tablet",
+        manufacturer: "Bayer / Janssen",
+        indications_en: "Prevention of blood clots, stroke prevention in atrial fibrillation, DVT/PE treatment",
+        indications_zh: "预防血栓、心房颤动卒中预防、深静脉血栓及肺栓塞治疗",
+        warnings_en: "NEVER stop without doctor approval — clot risk. Avoid ibuprofen and other NSAIDs.",
+        warnings_zh: "切勿未经医生批准停药——血栓风险。避免布洛芬等非甾体抗炎药。",
+        equivalents: [
+          { brand_name_en: "Xarelto", brand_name_zh: "拜瑞妥", generic_name: "Rivaroxaban", generic_name_zh: "利伐沙班", country: "CN", prescription_status: "Rx", strength: "10mg / 15mg / 20mg tablet", manufacturer: "拜耳医药", match: "exact" },
+        ]
+      },
+    ]
+  },
+
+  'brand:zoloft': {
+    summary_en: "Zoloft (Sertraline) is available in China as 左洛复 by the same Pfizer. Exact same product — prescription required.",
+    summary_zh: "Zoloft（舍曲林）在中国以「左洛复」品牌销售，同为辉瑞产品，处方药。",
+    agent_steps: [
+      { tool: "search_drugs_by_brand", label: "Looking up Zoloft...", done: 'Sertraline 25/50/100mg' },
+      { tool: "find_equivalents", label: "Bridging via ATC N06AB06...", done: '左洛复 found in NMPA' },
+      { tool: "check_interactions", label: "Checking SSRI interactions...", done: '⚠️ Serotonin syndrome warning' },
+    ],
+    safety_flags: [
+      "⚠️ Prescription required in both countries — cannot purchase OTC in China",
+      "⚠️ Do NOT stop abruptly — taper under doctor supervision only",
+      "🔴 Never combine with other SSRIs or MAOIs — serotonin syndrome risk",
+      "💡 Bring 90-day supply + bilingual prescription letter from your psychiatrist",
+    ],
+    interactions: [],
+    recommendations: [
+      {
+        brand_name_en: "Zoloft", brand_name_zh: "左洛复", generic_name: "Sertraline", generic_name_zh: "舍曲林",
+        country: "US", atc_code: "N06AB06", prescription_status: "Rx",
+        strength: "25mg / 50mg / 100mg tablet",
+        manufacturer: "Pfizer",
+        indications_en: "Major depressive disorder, anxiety disorders, OCD, PTSD",
+        indications_zh: "重度抑郁症、焦虑症、强迫症、创伤后应激障碍",
+        warnings_en: "Do not stop abruptly. Takes 4–6 weeks for full effect. Keep consistent timing.",
+        warnings_zh: "切勿骤然停药。需4-6周起效，每日按时服用。",
+        equivalents: [
+          { brand_name_en: "Zoloft", brand_name_zh: "左洛复", generic_name: "Sertraline", generic_name_zh: "舍曲林", country: "CN", prescription_status: "Rx", strength: "50mg tablet", manufacturer: "辉瑞制药", match: "exact" },
+        ]
+      },
+    ]
+  },
+};
+
+// ── UI State ─────────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('form-condition').classList.toggle('hidden', mode !== 'condition');
+  document.getElementById('form-brand').classList.toggle('hidden', mode !== 'brand');
+  document.getElementById('btn-condition').className =
+    'mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ' +
+    (mode === 'condition' ? 'mode-btn-active' : 'mode-btn-inactive');
+  document.getElementById('btn-brand').className =
+    'mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ' +
+    (mode === 'brand' ? 'mode-btn-active' : 'mode-btn-inactive');
+  document.getElementById('results').classList.add('hidden');
+}
+
+function swapDirection() {
+  [fromCountry, toCountry] = [toCountry, fromCountry];
+  updateDirectionUI();
+}
+
+function setDirection(from, to) {
+  fromCountry = from; toCountry = to;
+  updateDirectionUI();
+}
+
+function updateDirectionUI() {
+  // simplified — just show current direction
+  document.getElementById('pill-us').textContent = fromCountry === 'US' ? '🇺🇸 US' : '🇨🇳 China';
+  document.getElementById('pill-cn-1').textContent = toCountry === 'CN' ? '🇨🇳 China' : '🇺🇸 US';
+}
+
+function quickSearch(term) {
+  document.getElementById('input-condition').value = term;
+  search();
+}
+
+function quickBrand(term) {
+  setMode('brand');
+  document.getElementById('input-brand').value = term;
+  search();
+}
+
+// ── Main search ───────────────────────────────────────────────────────────────
+async function search() {
+  let key, query;
+
+  if (currentMode === 'condition') {
+    query = document.getElementById('input-condition').value.trim();
+    if (!query) return;
+    key = 'condition:' + query.toLowerCase();
+  } else {
+    query = document.getElementById('input-brand').value.trim();
+    if (!query) return;
+    key = 'brand:' + query.toLowerCase();
+  }
+
+  // Find demo data — exact or partial match
+  let data = DEMO_DATA[key];
+  if (!data) {
+    // try partial match
+    const allKeys = Object.keys(DEMO_DATA);
+    const match = allKeys.find(k => k.includes(query.toLowerCase()) || query.toLowerCase().includes(k.split(':')[1]));
+    data = match ? DEMO_DATA[match] : null;
+  }
+
+  // Show loading with agent steps
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+
+  const steps = data?.agent_steps || [
+    { tool: "search_drugs_by_condition", label: "Searching FDA database...", done: 'Results found' },
+    { tool: "find_equivalents", label: "Bridging via ATC codes...", done: 'Equivalents matched' },
+    { tool: "check_interactions", label: "Checking interactions...", done: 'Analysis complete' },
+  ];
+
+  await animateAgentSteps(steps);
+
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!data) {
+    data = buildFallback(query);
+  }
+
+  renderResults(data);
+}
+
+async function animateAgentSteps(steps) {
+  const container = document.getElementById('agent-steps');
+  const bar = document.getElementById('progress-bar');
+  container.innerHTML = '';
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    const pct = Math.round(((i) / steps.length) * 100);
+    bar.style.width = pct + '%';
+    bar.style.transition = 'width 0.4s ease';
+
+    const el = document.createElement('div');
+    el.className = 'step-line flex items-start gap-3 slide-in';
+    el.innerHTML = `
+      <div class="mt-0.5 flex-shrink-0">
+        <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+          <div class="spinner" style="width:14px;height:14px;border-width:2px"></div>
+        </div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${step.tool}()</span>
+        <p class="text-sm text-gray-600 mt-1">${step.label}</p>
+      </div>`;
+    container.appendChild(el);
+
+    await sleep(600 + Math.random() * 400);
+
+    // Mark done
+    el.querySelector('.w-6').innerHTML = '<span class="text-green-500 text-sm">✓</span>';
+    el.querySelector('.w-6').className = 'w-6 h-6 rounded-full bg-green-100 flex items-center justify-center';
+    const doneSpan = document.createElement('span');
+    doneSpan.className = 'text-xs text-green-600 mt-0.5 block';
+    doneSpan.textContent = '→ ' + step.done;
+    el.querySelector('.flex-1').appendChild(doneSpan);
+  }
+
+  bar.style.width = '100%';
+  await sleep(300);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderResults(data) {
+  const el = document.getElementById('results');
+  const fromFlag = fromCountry === 'US' ? '🇺🇸' : '🇨🇳';
+  const toFlag = toCountry === 'CN' ? '🇨🇳' : '🇺🇸';
+  let html = '';
+
+  // Summary card
+  if (data.summary_en) {
+    html += `
+      <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-5 fade-in">
+        <div class="flex gap-2 items-start">
+          <span class="text-2xl">🤖</span>
+          <div>
+            <p class="text-blue-900 font-semibold">${data.summary_en}</p>
+            <p class="text-blue-700 text-sm mt-1">${data.summary_zh}</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Safety flags
+  if (data.safety_flags?.length) {
+    const hasCritical = data.safety_flags.some(f => f.includes('🔴'));
+    html += `
+      <div class="bg-white border-l-4 ${hasCritical ? 'border-red-500' : 'border-amber-400'} rounded-2xl p-5 shadow-sm fade-in">
+        <p class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span>${hasCritical ? '🔴' : '⚠️'}</span> Safety Notices · 安全提示
+        </p>
+        <ul class="space-y-2">
+          ${data.safety_flags.map(f => `<li class="text-sm text-gray-700 flex gap-2"><span class="flex-shrink-0">${f.split(' ')[0]}</span><span>${f.substring(f.indexOf(' ')+1)}</span></li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  // Interactions
+  if (data.interactions?.length) {
+    html += `
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 fade-in">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-lg font-semibold">DDI CHECK</span>
+          Drug Interactions · 药物相互作用
+        </h3>
+        <div class="space-y-3">
+          ${data.interactions.map(ix => `
+            <div class="border rounded-xl p-4 sev-${ix.severity}">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${severityBadge(ix.severity)}">${ix.severity}</span>
+                <span class="text-sm font-semibold">${ix.drug_a} + ${ix.drug_b}</span>
+              </div>
+              <p class="text-sm">${ix.description_en}</p>
+              <p class="text-xs opacity-75 mt-1">${ix.description_zh}</p>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Drug cards
+  if (data.recommendations?.length) {
+    html += `
+      <div class="fade-in">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+          ${fromFlag} ${fromCountry} Drugs with ${toFlag} ${toCountry} Equivalents · 药品对照
+        </h3>
+        <div class="space-y-4">
+          ${data.recommendations.map(d => renderDrugCard(d, fromFlag, toFlag)).join('')}
+        </div>
+      </div>`;
+  }
+
+  el.innerHTML = html;
+  el.classList.remove('hidden');
+}
+
+function renderDrugCard(drug, fromFlag, toFlag) {
+  const rxBadge = rxBadgeHTML(drug.prescription_status);
+  const badges = [];
+  if (drug.requires_refrigeration) badges.push('<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">🧊 Refrigerate</span>');
+  if (drug.is_injectable) badges.push('<span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">💉 Injectable</span>');
+
+  return `
+    <div class="drug-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <!-- Drug header -->
+      <div class="p-5 pb-4">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-lg">${fromFlag}</span>
+              <h4 class="text-xl font-bold text-gray-900">${drug.brand_name_en || drug.brand_name_zh}</h4>
+              ${drug.brand_name_zh && drug.brand_name_zh !== drug.brand_name_en ? `<span class="text-gray-500 font-semibold text-lg">${drug.brand_name_zh}</span>` : ''}
+              ${rxBadge}
+              ${badges.join('')}
+            </div>
+            <p class="text-sm text-gray-500">
+              ${drug.generic_name ? `<span class="font-medium text-gray-700">${drug.generic_name}</span>` : ''}
+              ${drug.generic_name_zh ? ` · ${drug.generic_name_zh}` : ''}
+              ${drug.strength ? ` · <span class="text-blue-600 font-medium">${drug.strength}</span>` : ''}
+            </p>
+          </div>
+          ${drug.atc_code ? `
+            <div class="flex-shrink-0 ml-3 text-right">
+              <span class="atc-badge bg-gray-100 text-gray-500 text-xs px-2.5 py-1 rounded-lg block">${drug.atc_code}</span>
+              <span class="text-xs text-gray-400 mt-0.5 block">WHO ATC</span>
+            </div>` : ''}
+        </div>
+
+        ${drug.manufacturer ? `<p class="text-xs text-gray-400 mb-3">Manufacturer: ${drug.manufacturer}</p>` : ''}
+
+        <!-- Indications -->
+        ${drug.indications_en ? `
+          <div class="bg-gray-50 rounded-xl p-3 mb-3">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Treats · 适应症</p>
+            <p class="text-sm text-gray-800">${drug.indications_en}</p>
+            ${drug.indications_zh ? `<p class="text-xs text-gray-500 mt-0.5">${drug.indications_zh}</p>` : ''}
+          </div>` : ''}
+
+        <!-- Warnings -->
+        ${drug.warnings_en ? `
+          <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-2">
+            <p class="text-xs font-bold text-amber-700 mb-1">⚠️ Warnings · 注意事项</p>
+            <p class="text-sm text-amber-900">${drug.warnings_en}</p>
+            ${drug.warnings_zh ? `<p class="text-xs text-amber-700 mt-0.5">${drug.warnings_zh}</p>` : ''}
+          </div>` : ''}
+      </div>
+
+      <!-- Equivalents -->
+      ${drug.equivalents?.length ? `
+        <div class="eq-arrow px-5 py-4 border-t border-blue-100">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-blue-500 text-lg font-light">→</span>
+            <p class="text-xs font-bold text-blue-700 uppercase tracking-wide">${toFlag} Equivalent · 对应药品</p>
+          </div>
+          <div class="space-y-2">
+            ${drug.equivalents.map(eq => `
+              <div class="bg-white rounded-xl p-3.5 border border-blue-100 flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                    <span class="font-bold text-gray-900">${eq.brand_name_zh || eq.brand_name_en}</span>
+                    ${eq.brand_name_en && eq.brand_name_en !== eq.brand_name_zh ? `<span class="text-gray-500 text-sm">${eq.brand_name_en}</span>` : ''}
+                    ${matchBadge(eq.match)}
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    ${eq.generic_name_zh || ''} ${eq.strength ? '· ' + eq.strength : ''}
+                    ${eq.manufacturer ? '· ' + eq.manufacturer : ''}
+                  </p>
+                </div>
+                <div class="flex-shrink-0">
+                  ${rxBadgeHTML(eq.prescription_status)}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>` : `
+        <div class="bg-gray-50 px-5 py-4 border-t border-gray-100">
+          <p class="text-sm text-gray-500 flex items-center gap-2">
+            <span>🔍</span> No exact equivalent found in China database. Consult a local pharmacist.
+          </p>
+        </div>`}
+    </div>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function rxBadgeHTML(status) {
+  if (status === 'OTC')
+    return '<span class="badge-pop inline-block bg-green-100 text-green-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">✓ OTC 非处方</span>';
+  if (status === 'Rx')
+    return '<span class="badge-pop inline-block bg-orange-100 text-orange-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">Rx 处方药</span>';
+  return '<span class="badge-pop inline-block bg-red-100 text-red-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">⚠️ Controlled</span>';
+}
+
+function matchBadge(match) {
+  if (match === 'exact') return '<span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">✓ Exact match</span>';
+  if (match === 'generic') return '<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">Generic equivalent</span>';
+  if (match === 'similar') return '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-medium">⚠️ Similar — verify</span>';
+  return '';
+}
+
+function severityBadge(sev) {
+  return { contraindicated: 'bg-red-600 text-white', major: 'bg-orange-500 text-white', moderate: 'bg-yellow-500 text-white', minor: 'bg-green-600 text-white' }[sev] || 'bg-gray-200 text-gray-700';
+}
+
+function buildFallback(query) {
+  return {
+    summary_en: `No pre-loaded demo data for "${query}". In production, the AI agent would search openFDA, NMPA, and DrugBank in real time.`,
+    summary_zh: `"${query}"暂无演示数据。实际产品中，AI代理会实时查询openFDA、中国药监局和DrugBank数据库。`,
+    safety_flags: ["💡 This is a demo — connect the FastAPI backend for live results"],
+    interactions: [], recommendations: []
+  };
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Init
+setMode('condition');
+</script>
+</body>
+</html>
