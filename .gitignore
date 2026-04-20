@@ -1,0 +1,33 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Database
+*.db
+*.sqlite3
+
+# Data (raw downloads can be large)
+backend/data/raw/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.next/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

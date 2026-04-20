@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBridge — 药桥</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .flag { font-size: 1.4rem; }
+    .severity-contraindicated { color: #dc2626; font-weight: 700; }
+    .severity-major { color: #ea580c; font-weight: 600; }
+    .severity-moderate { color: #ca8a04; font-weight: 600; }
+    .severity-minor { color: #16a34a; }
+    .spinner { border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
+      <span class="text-3xl">💊</span>
+      <div>
+        <h1 class="text-2xl font-bold text-blue-700">MedBridge <span class="text-gray-400 font-normal text-lg">药桥</span></h1>
+        <p class="text-sm text-gray-500">Find your medicine across borders · 跨国找药，安全出行</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Mode Toggle -->
+    <div class="flex gap-2 mb-6">
+      <button id="btn-condition" onclick="setMode('condition')"
+        class="flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all bg-blue-600 text-white border-blue-600">
+        🔍 Search by Condition / 按病症搜索
+      </button>
+      <button id="btn-brand" onclick="setMode('brand')"
+        class="flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all bg-white text-gray-600 border-gray-300 hover:border-blue-400">
+        💊 Translate My Medicine / 翻译我的药品
+      </button>
+    </div>
+
+    <!-- Direction selector -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex items-center gap-4">
+      <span class="text-sm font-medium text-gray-600">Direction / 方向:</span>
+      <select id="from-country" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" onchange="updateDirection()">
+        <option value="US">🇺🇸 United States</option>
+        <option value="CN">🇨🇳 China / 中国</option>
+      </select>
+      <span class="text-gray-400 text-xl">→</span>
+      <select id="to-country" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" onchange="updateDirection()">
+        <option value="CN">🇨🇳 China / 中国</option>
+        <option value="US">🇺🇸 United States</option>
+      </select>
+    </div>
+
+    <!-- Search Form: Condition Mode -->
+    <div id="form-condition" class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Medical condition / 病症 (e.g. type 2 diabetes, hypertension, headache, 头痛, 高血压)
+      </label>
+      <div class="flex gap-3">
+        <input id="input-condition" type="text" placeholder="e.g. type 2 diabetes / 糖尿病"
+          class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onkeydown="if(event.key==='Enter') search()" />
+        <button onclick="search()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
+          Search 搜索
+        </button>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">Works in English or Chinese · 支持中英文输入</p>
+    </div>
+
+    <!-- Search Form: Brand Mode -->
+    <div id="form-brand" class="bg-white rounded-xl border border-gray-200 p-6 mb-6 hidden">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Drug brand or generic name / 药品品牌名或通用名
+      </label>
+      <div class="flex gap-3 mb-3">
+        <input id="input-brand" type="text" placeholder="e.g. Ozempic, 诺和泰, Metformin"
+          class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onkeydown="if(event.key==='Enter') search()" />
+        <button onclick="search()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-colors">
+          Translate 翻译
+        </button>
+      </div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Other drugs you take (for interaction check) / 其他用药（检查相互作用）</label>
+      <input id="input-other-drugs" type="text" placeholder="e.g. Metformin, Aspirin (comma-separated)"
+        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden flex flex-col items-center py-12 gap-4">
+      <div class="spinner"></div>
+      <p class="text-gray-500 text-sm">Agent is researching across US and CN databases...<br>
+        <span class="text-gray-400">正在跨库查询，请稍候...</span>
+      </p>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="hidden space-y-6"></div>
+
+    <!-- Disclaimer -->
+    <div class="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+      ⚠️ <strong>Medical Disclaimer / 医疗免责声明:</strong>
+      MedBridge provides information only. Always consult a licensed pharmacist or physician before changing or substituting any medication.
+      本工具仅供参考，更换药物前请务必咨询执业药剂师或医生。
+    </div>
+  </main>
+
+  <script>
+    let currentMode = 'condition';
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('form-condition').classList.toggle('hidden', mode !== 'condition');
+      document.getElementById('form-brand').classList.toggle('hidden', mode !== 'brand');
+      document.getElementById('btn-condition').className =
+        'flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ' +
+        (mode === 'condition' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400');
+      document.getElementById('btn-brand').className =
+        'flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ' +
+        (mode === 'brand' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400');
+      document.getElementById('results').classList.add('hidden');
+    }
+
+    function updateDirection() {
+      const from = document.getElementById('from-country').value;
+      const to = document.getElementById('to-country').value;
+      if (from === to) {
+        document.getElementById('to-country').value = from === 'US' ? 'CN' : 'US';
+      }
+    }
+
+    async function search() {
+      const fromCountry = document.getElementById('from-country').value;
+      const toCountry = document.getElementById('to-country').value;
+
+      let url, body;
+      if (currentMode === 'condition') {
+        const condition = document.getElementById('input-condition').value.trim();
+        if (!condition) return;
+        url = '/api/search/condition';
+        body = { condition, from_country: fromCountry, to_country: toCountry };
+      } else {
+        const brandName = document.getElementById('input-brand').value.trim();
+        if (!brandName) return;
+        const otherRaw = document.getElementById('input-other-drugs').value.trim();
+        const otherDrugs = otherRaw ? otherRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+        url = '/api/search/brand';
+        body = { brand_name: brandName, from_country: fromCountry, to_country: toCountry, other_drugs: otherDrugs };
+      }
+
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('results').classList.add('hidden');
+
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        renderResults(data, fromCountry, toCountry);
+      } catch (err) {
+        document.getElementById('results').innerHTML =
+          `<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">Error: ${err.message}</div>`;
+        document.getElementById('results').classList.remove('hidden');
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    function renderResults(data, fromCountry, toCountry) {
+      const el = document.getElementById('results');
+      const fromFlag = fromCountry === 'US' ? '🇺🇸' : '🇨🇳';
+      const toFlag = toCountry === 'US' ? '🇺🇸' : '🇨🇳';
+      let html = '';
+
+      // Summary
+      if (data.summary_en || data.summary_zh) {
+        html += `
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+            <p class="text-blue-900 font-medium">${data.summary_en || ''}</p>
+            ${data.summary_zh ? `<p class="text-blue-700 text-sm mt-1">${data.summary_zh}</p>` : ''}
+          </div>`;
+      }
+
+      // Safety flags
+      if (data.safety_flags && data.safety_flags.length > 0) {
+        html += `<div class="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p class="font-semibold text-red-800 mb-2">⚠️ Safety Warnings / 安全警告</p>
+          <ul class="space-y-1">${data.safety_flags.map(f => `<li class="text-red-700 text-sm">• ${f}</li>`).join('')}</ul>
+        </div>`;
+      }
+
+      // Interactions
+      if (data.interactions && data.interactions.length > 0) {
+        html += `<div class="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 class="font-bold text-gray-800 mb-3">💊 Drug Interactions / 药物相互作用</h3>
+          <div class="space-y-3">`;
+        for (const ix of data.interactions) {
+          const sevClass = `severity-${ix.severity}`;
+          html += `<div class="border border-gray-100 rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="${sevClass} text-sm uppercase">${ix.severity}</span>
+              <span class="text-gray-600 text-sm">${ix.drug_a} + ${ix.drug_b}</span>
+            </div>
+            <p class="text-sm text-gray-700">${ix.description_en || ''}</p>
+            ${ix.description_zh ? `<p class="text-xs text-gray-500 mt-1">${ix.description_zh}</p>` : ''}
+          </div>`;
+        }
+        html += '</div></div>';
+      }
+
+      // Drug cards
+      if (data.recommendations && data.recommendations.length > 0) {
+        html += `<div>
+          <h3 class="font-bold text-gray-700 text-sm mb-3 uppercase tracking-wide">Recommendations / 推荐药品</h3>
+          <div class="space-y-4">`;
+        for (const drug of data.recommendations) {
+          html += renderDrugCard(drug, fromFlag, toFlag);
+        }
+        html += '</div></div>';
+      }
+
+      el.innerHTML = html;
+      el.classList.remove('hidden');
+    }
+
+    function renderDrugCard(drug, fromFlag, toFlag) {
+      const rxBadge = drug.prescription_status === 'OTC'
+        ? '<span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">OTC 非处方</span>'
+        : drug.prescription_status === 'Rx'
+        ? '<span class="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-medium">Rx 处方药</span>'
+        : '<span class="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-medium">Controlled 管控药</span>';
+
+      const flags = `${fromFlag}`;
+      let html = `
+        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="flag">${flags}</span>
+                <h4 class="text-lg font-bold text-gray-900">${drug.brand_name_en || drug.brand_name_zh || ''}</h4>
+                ${drug.brand_name_zh && drug.brand_name_en !== drug.brand_name_zh ? `<span class="text-gray-500 font-medium">${drug.brand_name_zh}</span>` : ''}
+                ${rxBadge}
+              </div>
+              <p class="text-sm text-gray-500 mt-0.5">
+                ${drug.generic_name || ''} ${drug.generic_name_zh ? '· ' + drug.generic_name_zh : ''}
+                ${drug.strength ? '· <span class="font-medium">' + drug.strength + '</span>' : ''}
+              </p>
+            </div>
+            ${drug.atc_code ? `<span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded font-mono">${drug.atc_code}</span>` : ''}
+          </div>
+
+          ${drug.manufacturer ? `<p class="text-xs text-gray-400 mb-2">Manufacturer: ${drug.manufacturer}</p>` : ''}
+
+          ${drug.indications_en ? `
+            <div class="mb-3">
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Treats / 适应症</p>
+              <p class="text-sm text-gray-700">${drug.indications_en}</p>
+              ${drug.indications_zh ? `<p class="text-xs text-gray-500 mt-0.5">${drug.indications_zh}</p>` : ''}
+            </div>` : ''}
+
+          ${drug.warnings_en || drug.warnings_zh ? `
+            <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 mb-3">
+              <p class="text-xs font-semibold text-amber-700 mb-1">⚠️ Warnings / 注意事项</p>
+              ${drug.warnings_en ? `<p class="text-xs text-amber-800">${drug.warnings_en}</p>` : ''}
+              ${drug.warnings_zh ? `<p class="text-xs text-amber-700 mt-0.5">${drug.warnings_zh}</p>` : ''}
+            </div>` : ''}
+
+          ${drug.equivalents && drug.equivalents.length > 0 ? `
+            <div class="border-t border-gray-100 pt-3 mt-3">
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Equivalents in other country / 对应药品</p>
+              <div class="space-y-2">
+                ${drug.equivalents.map(eq => `
+                  <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <span class="font-semibold text-gray-800">${eq.brand_name_en || eq.brand_name_zh || ''}</span>
+                      ${eq.brand_name_zh && eq.brand_name_en !== eq.brand_name_zh ? `<span class="text-gray-500 ml-2">${eq.brand_name_zh}</span>` : ''}
+                      <span class="text-xs text-gray-500 ml-2">${eq.generic_name || ''} ${eq.strength ? '· ' + eq.strength : ''}</span>
+                    </div>
+                    <span class="text-xs ${eq.prescription_status === 'OTC' ? 'text-green-600' : 'text-orange-600'} font-medium">${eq.prescription_status}</span>
+                  </div>`).join('')}
+              </div>
+            </div>` : ''}
+        </div>`;
+      return html;
+    }
+  </script>
+</body>
+</html>
