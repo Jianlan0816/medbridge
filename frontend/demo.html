@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MedBridge Demo · 药桥演示</title>
+  <title>MedBridge Demo · 药桥演示 · Access Mode</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -70,6 +70,21 @@
 
     /* Equivalent arrow */
     .eq-arrow { background: linear-gradient(90deg, #dbeafe, #e0f2fe); }
+
+    /* Mode 3 — Access mode */
+    .access-gradient { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4f46e5 100%); }
+    .access-card { border-left: 4px solid; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .access-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .access-available { border-color: #16a34a; background: #f0fdf4; }
+    .access-partial { border-color: #ca8a04; background: #fefce8; }
+    .access-unavailable { border-color: #dc2626; background: #fef2f2; }
+    .access-telehealth { border-color: #0369a1; background: #f0f9ff; }
+    .mode-btn-access { background: #7c3aed; color: white; border-color: #7c3aed; }
+    .country-select-pill { cursor:pointer; transition: all 0.15s; border: 2px solid #e5e7eb; }
+    .country-select-pill:hover { border-color: #7c3aed; background: #f5f3ff; }
+    .country-select-pill.selected { border-color: #7c3aed; background: #ede9fe; color: #6d28d9; font-weight: 600; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    .float { animation: float 3s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -86,7 +101,7 @@
             <span class="text-blue-200 text-xl font-light">药桥</span>
             <span class="bg-blue-500 bg-opacity-40 text-blue-100 text-xs px-2 py-0.5 rounded-full font-medium border border-blue-400">DEMO</span>
           </div>
-          <p class="text-blue-200 text-sm mt-0.5">AI-powered drug translation · 智能药品翻译 · US ↔ 🇨🇳 China</p>
+          <p class="text-blue-200 text-sm mt-0.5">AI-powered drug translation · 智能药品翻译 · Global Access Intelligence</p>
         </div>
       </div>
       <div class="hidden md:flex items-center gap-2 text-xs text-blue-200 bg-blue-800 bg-opacity-40 px-3 py-2 rounded-lg border border-blue-600">
@@ -101,19 +116,24 @@
 <main class="max-w-5xl mx-auto px-4 py-8">
 
   <!-- Mode Toggle -->
-  <div class="flex gap-3 mb-6">
+  <div class="flex gap-2 mb-6">
     <button id="btn-condition" onclick="setMode('condition')"
       class="mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all mode-btn-active flex items-center justify-center gap-2">
-      🔍 <span>Search by Condition</span> <span class="opacity-60 font-normal hidden sm:inline">/ 按病症搜索</span>
+      🔍 <span>By Condition</span> <span class="opacity-60 font-normal hidden sm:inline">/ 按病症</span>
     </button>
     <button id="btn-brand" onclick="setMode('brand')"
       class="mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all mode-btn-inactive flex items-center justify-center gap-2">
-      💊 <span>Translate My Medicine</span> <span class="opacity-60 font-normal hidden sm:inline">/ 翻译我的药</span>
+      💊 <span>Translate Drug</span> <span class="opacity-60 font-normal hidden sm:inline">/ 翻译药品</span>
+    </button>
+    <button id="btn-access" onclick="setMode('access')"
+      class="mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all mode-btn-inactive flex items-center justify-center gap-2 relative">
+      🌍 <span>Access Abroad</span> <span class="opacity-60 font-normal hidden sm:inline">/ 海外获取</span>
+      <span class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">NEW</span>
     </button>
   </div>
 
   <!-- Direction Bar -->
-  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5 flex items-center gap-4">
+  <div id="direction-bar" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5 flex items-center gap-4">
     <span class="text-sm font-semibold text-gray-500">Direction / 方向</span>
     <div class="flex items-center gap-2">
       <button id="pill-us" class="country-pill active text-sm font-semibold px-4 py-1.5 rounded-full" onclick="setDirection('US','CN')">
@@ -194,6 +214,64 @@
     </div>
   </div>
 
+  <!-- ── ACCESS FORM (Mode 3) ── -->
+  <div id="form-access" class="hidden mb-5">
+    <!-- Purple hero banner -->
+    <div class="access-gradient text-white rounded-2xl p-5 mb-4">
+      <div class="flex items-start gap-3">
+        <span class="text-3xl float">🌍</span>
+        <div>
+          <h3 class="font-bold text-lg">Access Abroad · 海外获取</h3>
+          <p class="text-purple-200 text-sm mt-1">
+            Can't find your drug at home? Find where it's approved, available, and how to get it legally.
+            <span class="block mt-0.5">药品在当地买不到？查询哪些国家有售、如何合法获取。</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <!-- Drug input -->
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Which drug do you want to access? · 您想获取哪种药品？
+      </label>
+      <div class="flex gap-3 mb-5">
+        <input id="input-access" type="text"
+          placeholder="e.g. Wegovy · Mounjaro · Ozempic · Keytruda · Adderall"
+          class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-gray-50"
+          onkeydown="if(event.key==='Enter') search()" />
+        <button onclick="search()"
+          class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors shadow-sm">
+          Find Access 查询
+        </button>
+      </div>
+
+      <!-- Your country -->
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Your home country · 您所在国家
+      </label>
+      <div class="flex flex-wrap gap-2 mb-5" id="home-country-pills">
+        <span class="country-select-pill selected text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'IN')">🇮🇳 India</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'BR')">🇧🇷 Brazil</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'CN')">🇨🇳 China</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'MX')">🇲🇽 Mexico</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'ID')">🇮🇩 Indonesia</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'NG')">🇳🇬 Nigeria</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'PH')">🇵🇭 Philippines</span>
+        <span class="country-select-pill text-sm px-4 py-2 rounded-full" onclick="selectHomeCountry(this,'US')">🇺🇸 United States</span>
+      </div>
+
+      <!-- Quick examples -->
+      <div class="flex flex-wrap gap-2">
+        <span class="text-xs text-gray-400 self-center">Try:</span>
+        <span class="chip bg-purple-50 border border-purple-200 text-purple-700 text-xs px-3 py-1.5 rounded-full" onclick="quickAccess('Wegovy')">⚖️ Wegovy (Obesity)</span>
+        <span class="chip bg-purple-50 border border-purple-200 text-purple-700 text-xs px-3 py-1.5 rounded-full" onclick="quickAccess('Mounjaro')">💉 Mounjaro (Diabetes)</span>
+        <span class="chip bg-purple-50 border border-purple-200 text-purple-700 text-xs px-3 py-1.5 rounded-full" onclick="quickAccess('Keytruda')">🎗️ Keytruda (Cancer)</span>
+        <span class="chip bg-purple-50 border border-purple-200 text-purple-700 text-xs px-3 py-1.5 rounded-full" onclick="quickAccess('Adderall')">🧠 Adderall (ADHD)</span>
+      </div>
+    </div>
+  </div>
+
   <!-- ── AGENT THINKING ── -->
   <div id="loading" class="hidden">
     <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 mb-5">
@@ -234,6 +312,7 @@
 let currentMode = 'condition';
 let fromCountry = 'US';
 let toCountry = 'CN';
+let homeCountry = 'IN'; // for Mode 3
 
 // ── Demo responses keyed by (mode:query) ─────────────────────────────────────
 const DEMO_DATA = {
@@ -618,18 +697,248 @@ const DEMO_DATA = {
   },
 };
 
+// ── Mode 3: Access Demo Data ──────────────────────────────────────────────────
+const ACCESS_DATA = {
+
+  'wegovy': {
+    drug_en: 'Wegovy', drug_zh: '维格威', generic: 'Semaglutide 2.4mg',
+    fda_approved: true, approved_countries: ['US', 'UK', 'EU', 'Canada', 'Australia', 'Japan'],
+    summary_en: "Wegovy (Semaglutide 2.4mg) is FDA-approved for chronic weight management since 2021. Availability varies widely by country — many markets have it approved but face severe shortages due to demand.",
+    summary_zh: "Wegovy（司美格鲁肽2.4mg）自2021年获FDA批准用于慢性体重管理。各国供应情况差异显著，许多市场因需求旺盛面临严重短缺。",
+    agent_steps: [
+      { tool: "check_approval_status", label: "Checking FDA + EMA + TGA approval records...", done: 'Approved: US, UK, EU, Canada, AUS, Japan' },
+      { tool: "check_country_availability", label: "Checking availability in India, Southeast Asia, Middle East...", done: 'Not approved in IN, ID, PH, NG' },
+      { tool: "search_medical_tourism", label: "Finding medical tourism options...", done: '3 destination countries found' },
+      { tool: "search_telehealth", label: "Checking international telehealth providers...", done: '2 providers found, legal status verified' },
+      { tool: "find_biosimilars", label: "Searching for approved biosimilars / alternatives...", done: 'Rybelsus (oral) available in more countries' },
+    ],
+    access_options: [
+      {
+        type: 'available',
+        icon: '✈️',
+        title: 'Medical Tourism',
+        subtitle: 'Travel to get prescribed & start treatment',
+        color: 'access-available',
+        destinations: [
+          { country: '🇹🇭 Thailand', city: 'Bangkok', detail: 'Bumrungrad International Hospital · ~$450/month · Prescription required · English-speaking doctors', cost: '$450/mo', ease: 'Easy' },
+          { country: '🇸🇬 Singapore', city: 'Singapore', detail: 'Raffles Hospital, Mount Elizabeth · ~$600/month · Prescription required · Same-day appointment possible', cost: '$600/mo', ease: 'Easy' },
+          { country: '🇦🇪 UAE', city: 'Dubai', detail: 'Cleveland Clinic Abu Dhabi, Mediclinic · ~$500/month · Prescription required · Very accessible for Middle East / South Asia', cost: '$500/mo', ease: 'Easy' },
+        ],
+        note: 'Bring medical history and BMI records. Most clinics require in-person consultation before prescribing. Budget for 1 visit + 3-month supply.'
+      },
+      {
+        type: 'telehealth',
+        icon: '💻',
+        title: 'International Telehealth',
+        subtitle: 'Online prescription + international shipping',
+        color: 'access-telehealth',
+        destinations: [
+          { country: '🌐 Hims & Hers (US)', detail: 'Ships to 30+ countries · Compounded semaglutide available · ~$299/month · Legal gray area in some countries — verify import rules', cost: '$299/mo', ease: 'Moderate ⚠️' },
+          { country: '🌐 Noom Med (US)', detail: 'Online obesity program + prescription · Ships internationally with doctor clearance · ~$349/month', cost: '$349/mo', ease: 'Moderate ⚠️' },
+        ],
+        note: '⚠️ Import regulations vary — semaglutide is a controlled/prescription substance. Always verify your country\'s customs rules before ordering. Some countries flag or confiscate international shipments.',
+        warning: true,
+      },
+      {
+        type: 'partial',
+        icon: '💊',
+        title: 'Approved Alternatives (available locally)',
+        subtitle: 'Same active ingredient, different formulation',
+        color: 'access-partial',
+        destinations: [
+          { country: '🇮🇳 India (local)', detail: 'Rybelsus (Semaglutide oral tablet, 3/7/14mg) — approved by CDSCO · Ozempic (0.5/1mg injection) — approved for diabetes · NOT same dose as Wegovy 2.4mg', cost: '₹8,000-15,000/mo', ease: 'Available ✓' },
+        ],
+        note: 'Rybelsus and Ozempic contain the same active ingredient (semaglutide) but at lower doses approved for diabetes, not obesity. Discuss with your endocrinologist — some prescribe off-label for weight management.'
+      },
+      {
+        type: 'unavailable',
+        icon: '🚫',
+        title: 'Personal Import (Not Recommended)',
+        subtitle: 'Buying online without prescription',
+        color: 'access-unavailable',
+        destinations: [
+          { country: '⚠️ Online gray-market sources', detail: 'Unregulated semaglutide products are widely sold online. HIGH RISK: counterfeit products, wrong dosing, no cold-chain guarantee, legal consequences.', cost: 'Variable', ease: 'Dangerous ❌' },
+        ],
+        note: '🔴 MedBridge strongly advises against unregulated sources. Semaglutide requires refrigeration and precise dosing — counterfeits have caused hospitalizations.',
+        warning: true,
+      },
+    ],
+    clinical_trials: [
+      { trial: 'NCT05556473', title: 'Semaglutide for Obesity in Asian Populations', locations: 'India, China, South Korea', status: 'Recruiting', link: 'clinicaltrials.gov' },
+    ]
+  },
+
+  'mounjaro': {
+    drug_en: 'Mounjaro', drug_zh: '蒙扎罗', generic: 'Tirzepatide 5/10/15mg',
+    fda_approved: true, approved_countries: ['US', 'UK', 'EU', 'Canada', 'UAE'],
+    summary_en: "Mounjaro (Tirzepatide) is the newest dual GIP/GLP-1 agonist showing superior weight loss vs Ozempic. Approved in fewer countries and severely supply-constrained globally.",
+    summary_zh: "Mounjaro（替泽帕肽）是最新的双靶点GIP/GLP-1激动剂，减重效果优于Ozempic。获批国家更少，全球供应严重紧张。",
+    agent_steps: [
+      { tool: "check_approval_status", label: "Checking global approval status for Tirzepatide...", done: 'Approved: US, UK, EU, Canada, UAE only' },
+      { tool: "check_country_availability", label: "Checking CN, IN, BR availability...", done: 'Under review in China (NMPA), not approved IN/BR' },
+      { tool: "search_medical_tourism", label: "Finding access routes...", done: 'UAE most accessible for Asia/Africa patients' },
+      { tool: "check_clinical_trials", label: "Searching active trials...", done: '2 trials found accepting international patients' },
+    ],
+    access_options: [
+      {
+        type: 'available',
+        icon: '✈️',
+        title: 'Medical Tourism — Best Options',
+        subtitle: 'Countries where Mounjaro is approved & accessible',
+        color: 'access-available',
+        destinations: [
+          { country: '🇦🇪 UAE (Dubai)', detail: 'Mounjaro approved by UAE MOH · Cleveland Clinic Abu Dhabi, Aster Hospitals · ~$550/month · Excellent access point for South Asia, Middle East, Africa', cost: '$550/mo', ease: 'Best option' },
+          { country: '🇬🇧 UK', detail: 'Approved by MHRA · Private GP clinics (Nuffield, Bupa) · ~£400/month · Requires BMI ≥30 + comorbidity · Visa required for most nationalities', cost: '£400/mo', ease: 'Good' },
+        ],
+        note: 'Mounjaro is in extremely high demand — book appointments in advance. Bring your diabetes/obesity diagnosis and previous treatment history.'
+      },
+      {
+        type: 'partial',
+        icon: '🔬',
+        title: 'Clinical Trials (Free Access)',
+        subtitle: 'Participate in trials studying Tirzepatide',
+        color: 'access-partial',
+        destinations: [
+          { country: '🌐 SURMOUNT-CN Trial', detail: 'Tirzepatide for obesity in Chinese patients · Sites in China, Taiwan, Singapore · Free drug, close monitoring · eligibility: BMI ≥28', cost: 'Free', ease: 'Apply now' },
+          { country: '🌐 SURPASS-CVOT', detail: 'Cardiovascular outcomes trial · Multiple Asian sites · Type 2 diabetes required', cost: 'Free', ease: 'Apply now' },
+        ],
+        note: 'Clinical trials provide free access to cutting-edge drugs under medical supervision. Use clinicaltrials.gov to find trials near you.'
+      },
+      {
+        type: 'unavailable',
+        icon: '⏳',
+        title: 'Pending Approval (China)',
+        subtitle: 'NMPA review in progress',
+        color: 'access-unavailable',
+        destinations: [
+          { country: '🇨🇳 China', detail: 'Tirzepatide submitted to NMPA (国家药监局) for review. Expected approval: late 2025–2026. Cannot be purchased legally until approved.', cost: 'N/A', ease: 'Not yet available' },
+        ],
+        note: 'Follow NMPA announcements at nmpa.gov.cn for approval updates. Lilly China is actively pursuing approval.',
+      },
+    ],
+    clinical_trials: [
+      { trial: 'NCT05556473', title: 'SURMOUNT-CN: Tirzepatide in Asian Populations', locations: 'China, Taiwan, Singapore', status: 'Recruiting', link: 'clinicaltrials.gov' },
+    ]
+  },
+
+  'keytruda': {
+    drug_en: 'Keytruda', drug_zh: '可瑞达', generic: 'Pembrolizumab 200mg IV',
+    fda_approved: true, approved_countries: ['US', 'EU', 'UK', 'Japan', 'China', 'Canada', 'Australia'],
+    summary_en: "Keytruda (Pembrolizumab) is a landmark cancer immunotherapy approved in most major markets. The primary issue is cost — $150k+/year in the US vs $15-30k in India. Medical tourism to India or Turkey for the same drug at 80% lower cost is well-established.",
+    summary_zh: "可瑞达（帕博利珠单抗）已在大多数主要市场获批，主要障碍是价格——美国每年超15万美元，而印度仅需1.5-3万美元。前往印度或土耳其进行肿瘤治疗的医疗旅游已非常成熟。",
+    agent_steps: [
+      { tool: "check_approval_status", label: "Checking global cancer drug approvals...", done: 'Approved in 40+ countries' },
+      { tool: "check_price_differential", label: "Analyzing cost by country...", done: 'US: $150k/yr vs India: $18k/yr (same drug)' },
+      { tool: "search_medical_tourism", label: "Finding oncology medical tourism centers...", done: 'Apollo, Bumrungrad, Medicana found' },
+      { tool: "check_biosimilars", label: "Checking for biosimilars...", done: 'Biosimilars approved in India (Pembrolizumab-pvzr)' },
+    ],
+    access_options: [
+      {
+        type: 'available',
+        icon: '🏥',
+        title: 'Medical Tourism — Cancer Treatment',
+        subtitle: 'Same drug, 80% lower cost',
+        color: 'access-available',
+        destinations: [
+          { country: '🇮🇳 India — Apollo Hospitals', detail: 'Pembrolizumab by MSD India · $15,000-20,000/year vs $150,000+ in US · JCI-accredited hospitals · English-speaking oncologists · Mumbai, Delhi, Bangalore, Chennai', cost: '$15-20k/yr', ease: 'Excellent' },
+          { country: '🇹🇷 Turkey — Medicana, Memorial', detail: 'EU-standard oncology · $20,000-30,000/year · Short flights from Europe/Middle East · No visa required for many nationalities', cost: '$20-30k/yr', ease: 'Very Good' },
+          { country: '🇹🇭 Thailand — Bumrungrad', detail: 'World-renowned oncology center · $25,000-35,000/year · Excellent for Southeast Asian patients · English-speaking staff', cost: '$25-35k/yr', ease: 'Very Good' },
+        ],
+        note: 'Bring all pathology reports, biopsy results, and prior treatment records. Most centers offer remote consultation before you travel. Factor in accommodation, travel, and companion costs.'
+      },
+      {
+        type: 'partial',
+        icon: '🧬',
+        title: 'Approved Biosimilars (Lower Cost)',
+        subtitle: 'Same mechanism, more affordable',
+        color: 'access-partial',
+        destinations: [
+          { country: '🇮🇳 India — Pemgarda, Bepembro', detail: 'FDA-approved pembrolizumab biosimilars available in India · 40-60% cheaper than branded Keytruda · CDSCO approved · Available at major cancer centers', cost: '$8-12k/yr', ease: 'Good ✓' },
+        ],
+        note: 'Biosimilars are rigorously tested equivalents of the original biologic. For pembrolizumab, biosimilars have shown identical efficacy in trials. Ask your oncologist if you\'re a candidate.'
+      },
+    ],
+    clinical_trials: [
+      { trial: 'NCT04191720', title: 'Pembrolizumab for NSCLC in Asia', locations: 'India, China, South Korea, Japan', status: 'Active', link: 'clinicaltrials.gov' },
+    ]
+  },
+
+  'adderall': {
+    drug_en: 'Adderall', drug_zh: '阿得拉', generic: 'Amphetamine salts (CII Controlled)',
+    fda_approved: true, approved_countries: ['US', 'Canada (limited)'],
+    summary_en: "Adderall (amphetamine) is a Schedule II controlled substance in the US — among the most restricted drug classes globally. Most countries do not approve amphetamines for ADHD and criminalize possession. Alternatives like Strattera, Ritalin, or Vyvanse may be available.",
+    summary_zh: "Adderall（安非他命）在美国属于二类管控物质，在全球属最受限制的药物类别之一。大多数国家不批准安非他命用于ADHD，持有属违法行为。Strattera、利他林或Vyvanse等替代品可能有售。",
+    agent_steps: [
+      { tool: "check_approval_status", label: "Checking controlled substance status globally...", done: '⚠️ Illegal in most countries outside US' },
+      { tool: "check_alternatives", label: "Finding legal ADHD alternatives by country...", done: 'Strattera, Ritalin, Vyvanse available in more countries' },
+      { tool: "check_import_rules", label: "Checking personal import regulations...", done: '⚠️ Cannot import amphetamines to most countries' },
+    ],
+    access_options: [
+      {
+        type: 'unavailable',
+        icon: '🚫',
+        title: 'Cannot Bring Adderall Abroad',
+        subtitle: 'Amphetamines are illegal in most countries',
+        color: 'access-unavailable',
+        destinations: [
+          { country: '🇨🇳 China', detail: 'Amphetamines are Schedule I narcotics in China. Possession = criminal offense, potential imprisonment. Do NOT bring Adderall to China even with a US prescription.', cost: 'N/A', ease: '🔴 Illegal' },
+          { country: '🇯🇵 Japan', detail: 'Amphetamines are strictly prohibited. Even a valid US prescription is not recognized. Conviction carries up to 5 years imprisonment.', cost: 'N/A', ease: '🔴 Illegal' },
+          { country: '🇮🇳 India · 🇧🇷 Brazil · 🇦🇪 UAE', detail: 'Not approved for medical use. Personal import not permitted. Customs seizure and potential criminal charges.', cost: 'N/A', ease: '🔴 Not permitted' },
+        ],
+        note: '🔴 Never travel internationally with Adderall without verifying the destination country\'s specific laws. Even transit through some countries (Japan, China) can result in arrest.',
+        warning: true,
+      },
+      {
+        type: 'available',
+        icon: '✅',
+        title: 'Legal ADHD Alternatives Available Abroad',
+        subtitle: 'Approved in more countries, legal to use',
+        color: 'access-available',
+        destinations: [
+          { country: '🌍 Strattera (Atomoxetine) — Non-stimulant', detail: 'Approved in US, EU, UK, China (阿托西汀), Japan, India, Brazil, UAE · NOT a controlled substance · Can be brought abroad with prescription · Effective for adult ADHD', cost: 'Varies', ease: '✅ Available widely' },
+          { country: '🌍 Ritalin (Methylphenidate)', detail: 'Available in most countries (different scheduling than amphetamines) · China (利他林), EU, UK, India (limited) · Check each country\'s specific rules · Often available by local prescription', cost: 'Varies', ease: '⚠️ Check per country' },
+          { country: '🌍 Vyvanse (Lisdexamfetamine)', detail: 'Available in US, Canada, UK, EU, Brazil · Less available in Asia · Still a controlled substance but easier to bring to some EU/UK destinations with documentation', cost: 'Varies', ease: '⚠️ Limited countries' },
+        ],
+        note: 'If traveling long-term, the best strategy is to consult a local psychiatrist in your destination country and get a local prescription for an approved alternative.',
+      },
+    ],
+    clinical_trials: []
+  },
+
+};
+
 // ── UI State ─────────────────────────────────────────────────────────────────
 function setMode(mode) {
   currentMode = mode;
   document.getElementById('form-condition').classList.toggle('hidden', mode !== 'condition');
   document.getElementById('form-brand').classList.toggle('hidden', mode !== 'brand');
-  document.getElementById('btn-condition').className =
-    'mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ' +
-    (mode === 'condition' ? 'mode-btn-active' : 'mode-btn-inactive');
-  document.getElementById('btn-brand').className =
-    'mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ' +
-    (mode === 'brand' ? 'mode-btn-active' : 'mode-btn-inactive');
+  document.getElementById('form-access').classList.toggle('hidden', mode !== 'access');
+
+  const base = 'mode-btn flex-1 py-3.5 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ';
+  document.getElementById('btn-condition').className = base + (mode === 'condition' ? 'mode-btn-active' : 'mode-btn-inactive');
+  document.getElementById('btn-brand').className = base + (mode === 'brand' ? 'mode-btn-active' : 'mode-btn-inactive');
+  document.getElementById('btn-access').className = base + 'relative ' + (mode === 'access' ? 'mode-btn-access border-purple-600' : 'mode-btn-inactive');
+  // Keep NEW badge
+  if (mode !== 'access') {
+    const newBadge = document.querySelector('#btn-access .absolute');
+    if (newBadge) newBadge.style.display = '';
+  }
   document.getElementById('results').classList.add('hidden');
+
+  // hide direction bar for access mode
+  document.getElementById('direction-bar').classList.toggle('hidden', mode === 'access');
+}
+
+function selectHomeCountry(el, code) {
+  homeCountry = code;
+  document.querySelectorAll('#home-country-pills .country-select-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function quickAccess(drug) {
+  setMode('access');
+  document.getElementById('input-access').value = drug;
+  search();
 }
 
 function swapDirection() {
@@ -667,10 +976,15 @@ async function search() {
     query = document.getElementById('input-condition').value.trim();
     if (!query) return;
     key = 'condition:' + query.toLowerCase();
-  } else {
+  } else if (currentMode === 'brand') {
     query = document.getElementById('input-brand').value.trim();
     if (!query) return;
     key = 'brand:' + query.toLowerCase();
+  } else {
+    // Mode 3 — Access
+    query = document.getElementById('input-access').value.trim();
+    if (!query) return;
+    return await searchAccess(query);
   }
 
   // Find demo data — exact or partial match
@@ -930,6 +1244,143 @@ function buildFallback(query) {
     safety_flags: ["💡 This is a demo — connect the FastAPI backend for live results"],
     interactions: [], recommendations: []
   };
+}
+
+// ── Mode 3: Access Search ─────────────────────────────────────────────────────
+async function searchAccess(query) {
+  const key = query.toLowerCase().replace(/\s+/g,'');
+  let data = ACCESS_DATA[key];
+  if (!data) {
+    const match = Object.keys(ACCESS_DATA).find(k => k.includes(key) || key.includes(k));
+    data = match ? ACCESS_DATA[match] : null;
+  }
+
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+
+  const steps = data?.agent_steps || [
+    { tool: "check_approval_status", label: "Checking FDA + global regulatory databases...", done: 'Approval status verified' },
+    { tool: "check_country_availability", label: `Checking availability in ${homeCountry}...`, done: 'Country status retrieved' },
+    { tool: "search_medical_tourism", label: "Scanning medical tourism destinations...", done: 'Options ranked by cost + accessibility' },
+    { tool: "check_alternatives", label: "Finding approved alternatives...", done: 'Alternatives listed' },
+  ];
+
+  await animateAgentSteps(steps);
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!data) {
+    data = {
+      drug_en: query, summary_en: `No demo data for "${query}". In production, the agent queries FDA, EMA, NMPA, and 50+ regulatory databases in real time.`,
+      summary_zh: `"${query}"暂无演示数据。实际产品中，代理会实时查询FDA、EMA、NMPA等50多个监管数据库。`,
+      access_options: [], clinical_trials: []
+    };
+  }
+
+  renderAccess(data);
+}
+
+function renderAccess(data) {
+  const el = document.getElementById('results');
+  let html = '';
+
+  // Header
+  html += `
+    <div class="access-gradient text-white rounded-2xl p-6 fade-in">
+      <div class="flex items-start gap-4">
+        <span class="text-4xl float">🌍</span>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 flex-wrap mb-1">
+            <h2 class="text-2xl font-black">${data.drug_en}</h2>
+            ${data.drug_zh ? `<span class="text-purple-200 font-semibold text-xl">${data.drug_zh}</span>` : ''}
+            ${data.fda_approved ? '<span class="bg-green-400 text-green-900 text-xs px-2.5 py-1 rounded-full font-bold">✓ FDA Approved</span>' : ''}
+          </div>
+          <p class="text-purple-200 text-sm">${data.generic || ''}</p>
+          ${data.approved_countries ? `
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-xs text-purple-300">Approved in:</span>
+              ${data.approved_countries.map(c => `<span class="bg-white bg-opacity-20 text-white text-xs px-2 py-0.5 rounded-full">${c}</span>`).join('')}
+            </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  // Summary
+  html += `
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 fade-in">
+      <div class="flex gap-3">
+        <span class="text-2xl">🤖</span>
+        <div>
+          <p class="text-gray-800 font-medium">${data.summary_en}</p>
+          <p class="text-gray-500 text-sm mt-1">${data.summary_zh}</p>
+        </div>
+      </div>
+    </div>`;
+
+  // Access options
+  if (data.access_options?.length) {
+    html += `<div class="space-y-4 fade-in">`;
+    for (const opt of data.access_options) {
+      const iconBg = opt.type === 'available' ? 'bg-green-100' : opt.type === 'telehealth' ? 'bg-blue-100' : opt.type === 'partial' ? 'bg-yellow-100' : 'bg-red-100';
+      html += `
+        <div class="access-card ${opt.color} rounded-2xl p-5 border">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="${iconBg} w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0">${opt.icon}</div>
+            <div>
+              <h3 class="font-bold text-gray-900">${opt.title}</h3>
+              <p class="text-sm text-gray-500">${opt.subtitle}</p>
+            </div>
+          </div>
+          <div class="space-y-3 mb-4">
+            ${opt.destinations.map(d => `
+              <div class="bg-white rounded-xl p-4 border border-white border-opacity-60 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <p class="font-semibold text-gray-800 text-sm">${d.country}</p>
+                    <p class="text-xs text-gray-600 mt-1">${d.detail}</p>
+                  </div>
+                  <div class="flex-shrink-0 text-right">
+                    <span class="text-sm font-bold text-gray-800 block">${d.cost}</span>
+                    <span class="text-xs text-gray-500">${d.ease}</span>
+                  </div>
+                </div>
+              </div>`).join('')}
+          </div>
+          ${opt.note ? `
+            <div class="${opt.warning ? 'bg-red-50 border border-red-100' : 'bg-white bg-opacity-60 border border-white'} rounded-xl p-3">
+              <p class="text-xs text-gray-600">${opt.note}</p>
+            </div>` : ''}
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Clinical trials
+  if (data.clinical_trials?.length) {
+    html += `
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 fade-in">
+        <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span class="bg-purple-100 text-purple-700 text-xs px-2.5 py-1 rounded-lg font-semibold">🔬 TRIALS</span>
+          Active Clinical Trials · 临床试验
+        </h3>
+        <div class="space-y-3">
+          ${data.clinical_trials.map(t => `
+            <div class="border border-gray-100 rounded-xl p-4 flex items-center justify-between gap-4">
+              <div>
+                <p class="font-semibold text-gray-800 text-sm">${t.title}</p>
+                <p class="text-xs text-gray-500 mt-0.5">📍 ${t.locations} · ID: ${t.trial}</p>
+              </div>
+              <div class="flex-shrink-0 text-right">
+                <span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-semibold">${t.status}</span>
+                <p class="text-xs text-blue-500 mt-1 cursor-pointer hover:underline">${t.link} →</p>
+              </div>
+            </div>`).join('')}
+        </div>
+        <p class="text-xs text-gray-400 mt-3">💡 Clinical trials provide free or subsidized access to cutting-edge drugs under medical supervision. Always consult your doctor before applying.</p>
+      </div>`;
+  }
+
+  el.innerHTML = html;
+  el.classList.remove('hidden');
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
